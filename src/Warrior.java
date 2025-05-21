@@ -1,14 +1,16 @@
 import java.util.List;
 
-public class Tank extends Hero{
+public class Warrior extends Hero{
 
-    Tank(double parry, String name, int health, int damage){
+    public Warrior(String name, int health, int damage) {
         super(name, health, damage);
     }
 
     @Override
     public void useAbility(List<Hero> heroes, Boss boss) {
-
+        int bonus = 30;
+        boss.receiveDamage(bonus);
+        System.out.println(name + " uses Rage and hits Boss for " + bonus);
     }
 
     @Override
@@ -17,10 +19,5 @@ public class Tank extends Hero{
             enemy.receiveDamage(this.damage);
             System.out.println(this.name + " attacked " + enemy.getName() + " for " + this.damage + " damage.");
         }
-    }
-
-    public int reflectDamage(int incomingDamage){
-        int reflected = incomingDamage / 5;
-        return reflected;
     }
 }
