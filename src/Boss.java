@@ -1,32 +1,23 @@
+import java.util.List;
 import java.util.Random;
 
 public class Boss extends Character {
-    public int superDamage;
     private Random random = new Random();
 
-    public Boss(int superDamage, String name, int health, int damage) {
+    public Boss(String name, int health, int damage) {
         super(name, health, damage);
-        this.superDamage = superDamage;
     }
 
-    @Override
-    public void attack(Character enemy) {
-        enemy.receiveDamage(this.damage);
-        System.out.println(this.name + " attacked " + enemy.getName() + " for " + this.damage + " damage.");
-    }
+    public void attack(List<Hero> heroes) {
+        for (Hero h : heroes) {
+            if (h.isAlive()) {
+                int dmg = damage;
+                boolean critical = random.nextInt(100) < 20;
+                if (critical) dmg *= 2;
 
-    @Override
-    public void receiveDamage(int damage) {
-        this.health -= damage;
-        if (this.health < 0) this.health = 0;
-    }
-
-    public boolean attemptSuperAttack() {
-        int randomChance = random.nextInt(3); // 0, 1, or 2
-        return randomChance <= superDamage;
-    }
-
-    public int getSuperDamage() {
-        return superDamage;
+                h.receiveDamage(dmg);
+                System.out.println("Boss hits " + h.getName() + " for " + dmg + (critical ? " (CRITICAL!)" : ""));
+            }
+        }
     }
 }

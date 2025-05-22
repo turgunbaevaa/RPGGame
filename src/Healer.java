@@ -1,29 +1,44 @@
-import java.util.List;
+import java.util.*;
 
 public class Healer extends Hero {
-    int healingPower;
+    private int healingPower;
 
-    public Healer(int healingPower, String name, int health, int damage) {
+    public Healer(String name, int health, int damage, int healingPower) {
         super(name, health, damage);
         this.healingPower = healingPower;
     }
 
     @Override
-    public void attack(Character enemy) {
-        // Healer does not attack
+    public void attack(Boss boss) {
+        // Healer не атакует
     }
 
     @Override
     public void useAbility(List<Hero> heroes, Boss boss) {
-        heal(heroes);
+        Hero target = chooseHealingTarget(heroes);
+        if (target != null) {
+            target.receiveHealing(healingPower);
+            System.out.println(this.name + " healed " + target.getName() + " for " + healingPower + " HP.");
+        } else {
+            System.out.println(this.name + " никого не лечил — нет подходящих целей.");
+        }
     }
 
-    private void heal(List<Hero> heroes) {
-        for (Hero hero : heroes) {
-            if (hero != this && hero.getHealth() > 0) {
-                hero.receiveHealing(healingPower);
-                System.out.println(this.name + " healed " + hero.getName() + " for " + healingPower + " HP.");
-            }
+    private Hero chooseHealingTarget(List<Hero> heroes) {
+        List<Hero> candidates = heroes.stream()
+                .filter(h -> h != this && h.isAlive() && h.getHealth() < 1000)
+                .toList();
+
+        if (candidates.isEmpty()) return null;
+
+        System.out.println("Кого вы хотите вылечить?");
+        for (int i = 0; i < candidates.size(); i++) {
+            Hero h = candidates.get(i);
+            System.out.println("[" + (i + 1) + "] " + h.getName() + " (HP: " + h.getHealth() + ")");
         }
+
+        Scanner scanner = new Scanner(System.in);
+        int choice = scanner.nextInt();
+        return (choice >= 1 && choice <= candidates.size()) ? candidates.get(choice - 1) : null;
     }
 }

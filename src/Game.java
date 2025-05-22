@@ -1,23 +1,22 @@
 import java.util.*;
 
 public class Game {
-    private List<Hero> heroes;
-    private Boss boss;
-    private BattleManager battleManager;
+    public static void main(String[] args) {
+        List<Hero> heroes = List.of(
+                new Warrior("Warrior", 1000, 300),
+                new Healer("Healer", 800, 0, 400),
+                new Archer("Archer", 900, 300),
+                new Tank("Tank", 1200, 500)
+        );
 
-    public Game() {
-        heroes = new ArrayList<>();
-        heroes.add(new Tank("Tank", 1000, 40));
-        heroes.add(new Healer(20, "Healer", 1000, 20));
-        heroes.add(new Warrior("Warrior", 1000, 20));
-        heroes.add(new Archer("Archer", 1000, 20));
+        Boss boss = new Boss("Boss", 1500, 50);
 
-        boss = new Boss(0, "Boss", 1000, 20);
+        System.out.println("Select mission: [1] Kill Boss | [2] Survive 5 turns");
+        Scanner scanner = new Scanner(System.in);
+        int missionChoice = scanner.nextInt();
 
-        battleManager = new BattleManager(heroes, boss);
-    }
+        Mission mission = (missionChoice == 2) ? new SurviveMission(5) : new KillBossMission();
 
-    public void start() {
-        battleManager.battle();
+        new CombatController(heroes, boss, mission).start();
     }
 }

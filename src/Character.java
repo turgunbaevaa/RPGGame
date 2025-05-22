@@ -1,43 +1,24 @@
-//parent class
 public abstract class Character {
     protected String name;
-    protected Integer health;
-    protected Integer damage;
+    protected int health;
+    protected int damage;
 
-    public Character(String name, Integer health, Integer damage) {
+    public Character(String name, int health, int damage) {
         this.name = name;
         this.health = health;
         this.damage = damage;
     }
-
-    public abstract void attack(Character enemy);
-    public abstract void receiveDamage(int damage);
 
     public boolean isAlive() {
         return health > 0;
     }
 
-    public String getName() {
-        return name;
+    public void receiveDamage(int dmg) {
+        health -= dmg;
+        if (health < 0) health = 0;
     }
 
-    public Integer getHealth() {
-        return health;
-    }
-
-    public Integer getDamage() {
-        return damage;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setHealth(Integer health) {
-        this.health = health;
-    }
-
-    public void setDamage(Integer damage) {
-        this.damage = damage;
-    }
+    public String getName() { return name; }
+    public int getHealth() { return health; }
+    public int getDamage() { return damage; }
 }
