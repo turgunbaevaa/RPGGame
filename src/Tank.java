@@ -2,7 +2,7 @@ import java.util.List;
 
 public class Tank extends Hero{
 
-    Tank(double parry, String name, int health, int damage){
+    Tank(String name, int health, int damage){
         super(name, health, damage);
     }
 

@@ -70,15 +70,6 @@ public class BattleManager {
         }
     }
 
-    public void healHeroes() {
-        for (Hero hero : heroes) {
-            if (hero instanceof Healer) {
-                Healer healer = (Healer) hero;
-                healer.heal(heroes);
-            }
-        }
-    }
-
     public void battle() {
         while (!isFinish) {
             if (isFirstAttack) {
@@ -89,17 +80,6 @@ public class BattleManager {
                 bossHit();
                 heroesHit();
                 statistic();
-
-                // Check if healer is alive to heal
-                boolean healerAlive = heroes.stream()
-                        .filter(h -> h instanceof Healer)
-                        .anyMatch(h -> h.getHealth() > 0);
-
-                if (healerAlive) {
-                    healHeroes();
-                } else {
-                    System.out.println("Healer is dead and can't heal!");
-                }
             }
 
             boolean allHeroesDead = heroes.stream().allMatch(h -> h.getHealth() <= 0);

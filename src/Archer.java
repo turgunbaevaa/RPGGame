@@ -14,12 +14,17 @@ public class Archer extends Hero {
     public void useAbility(List<Hero> heroes, Boss boss) {
         if (!this.isAlive()) return;
 
-        boolean doubleAttack = random.nextInt(100) < 30; // 30% chance
+        if (cooldown > 0) {
+            cooldown--;
+            return;
+        }
+
+        boolean doubleAttack = random.nextInt(100) < 30;
         if (doubleAttack) {
             System.out.println(this.name + " used Piercing Shot and attacked twice!");
             this.attack(boss);
             this.attack(boss);
-            cooldown = 2; // wait 2 turns before trying again
+            cooldown = 2;
         } else {
             System.out.println(this.name + " tried to use Piercing Shot but failed.");
         }

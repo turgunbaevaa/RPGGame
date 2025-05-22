@@ -11,12 +11,14 @@ public class Boss extends Character {
 
     @Override
     public void attack(Character enemy) {
-
+        enemy.receiveDamage(this.damage);
+        System.out.println(this.name + " attacked " + enemy.getName() + " for " + this.damage + " damage.");
     }
 
     @Override
     public void receiveDamage(int damage) {
-
+        this.health -= damage;
+        if (this.health < 0) this.health = 0;
     }
 
     public boolean attemptSuperAttack() {
