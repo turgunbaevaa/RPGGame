@@ -13,7 +13,7 @@ public class Warrior extends Hero {
 
     @Override
     public void useAbility(List<Hero> allies, Boss boss) {
-        int bonus = 30;
+        int bonus = 300;
         boss.receiveDamage(bonus);
         System.out.println(name + " used Rage and dealt extra " + bonus + " damage!");
     }
