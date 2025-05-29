@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.Scanner;
 
 public class Warrior extends Hero {
     public Warrior(String name, int health, int damage) {
@@ -12,7 +13,7 @@ public class Warrior extends Hero {
     }
 
     @Override
-    public void useAbility(List<Hero> allies, Boss boss) {
+    public void useAbility(List<Hero> allies, Boss boss, Scanner scanner) {
         int bonus = 300;
         boss.receiveDamage(bonus);
         System.out.println(name + " used Rage and dealt extra " + bonus + " damage!");

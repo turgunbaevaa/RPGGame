@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.Scanner;
 
 public abstract class Hero extends Character {
     public Hero(String name, int health, int damage) {
@@ -10,5 +11,5 @@ public abstract class Hero extends Character {
     }
 
     public abstract void attack(Boss boss);
-    public abstract void useAbility(List<Hero> allies, Boss boss);
+    public abstract void useAbility(List<Hero> heroes, Boss boss, Scanner scanner);
 }

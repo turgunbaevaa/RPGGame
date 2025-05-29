@@ -1,23 +1,30 @@
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Boss extends Character {
-    private Random random = new Random();
-
     public Boss(String name, int health, int damage) {
         super(name, health, damage);
     }
 
     public void attack(List<Hero> heroes) {
-        for (Hero h : heroes) {
-            if (h.isAlive()) {
-                int dmg = damage;
-                boolean critical = random.nextInt(100) < 20;
-                if (critical) dmg *= 2;
+        Hero target = null;
 
-                h.receiveDamage(dmg);
-                System.out.println("Boss hits " + h.getName() + " for " + dmg + (critical ? " (CRITICAL!)" : ""));
+        for (Hero h : heroes) {
+            if (h instanceof Tank tank && tank.isAlive() && tank.isTaunting()) {
+                target = tank;
+                break;
             }
+        }
+
+        if (target == null) {
+            List<Hero> aliveHeroes = heroes.stream().filter(Hero::isAlive).toList();
+            if (!aliveHeroes.isEmpty()) {
+                target = aliveHeroes.get(new Random().nextInt(aliveHeroes.size()));
+            }
+        }
+
+        if (target != null) {
+            target.receiveDamage(damage);
+            System.out.println("Boss attacked " + target.getName() + " for " + damage + " damage!");
         }
     }
 }

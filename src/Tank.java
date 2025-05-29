@@ -1,8 +1,19 @@
 import java.util.List;
+import java.util.Scanner;
 
 public class Tank extends Hero {
+    private boolean isTaunting = false;
+
     public Tank(String name, int health, int damage) {
         super(name, health, damage);
+    }
+
+    public boolean isTaunting() {
+        return isTaunting;
+    }
+
+    public void setTaunting(boolean taunting) {
+        this.isTaunting = taunting;
     }
 
     @Override
@@ -12,7 +23,8 @@ public class Tank extends Hero {
     }
 
     @Override
-    public void useAbility(List<Hero> allies, Boss boss) {
-        // Reflect damage in boss's attack method, handled elsewhere if needed
+    public void useAbility(List<Hero> allies, Boss boss, Scanner scanner) {
+        setTaunting(true);
+        System.out.println(name + " used Taunt! Boss will attack them next turn.");
     }
 }

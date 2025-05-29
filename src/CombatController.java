@@ -23,18 +23,31 @@ public class CombatController {
                 if (!h.isAlive()) continue;
 
                 System.out.println("\n" + h.getName() + " (HP: " + h.getHealth() + ")");
-                System.out.println("[1] Attack | [2] Ability | [3] Skip");
-                int choice = scanner.nextInt();
 
+                if (h instanceof Healer) {
+                    System.out.println("[1] Attack | [2] Heal | [3] Skip");
+                } else {
+                    System.out.println("[1] Attack | [2] Ability | [3] Skip");
+                }
+
+                int choice = scanner.nextInt();
                 switch (choice) {
                     case 1 -> h.attack(boss);
-                    case 2 -> h.useAbility(heroes, boss);
+                    case 2 -> h.useAbility(heroes, boss, scanner);
                     case 3 -> System.out.println(h.getName() + " skipped the turn.");
+                    default -> System.out.println("Invalid action, skipping...");
                 }
             }
 
             if (boss.isAlive()) {
                 boss.attack(heroes);
+            }
+
+            // Сброс Taunt после атаки босса
+            for (Hero h : heroes) {
+                if (h instanceof Tank tank) {
+                    tank.setTaunting(false);
+                }
             }
 
             printStatus();

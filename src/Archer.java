@@ -1,5 +1,6 @@
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 
 public class Archer extends Hero {
     private Random random = new Random();
@@ -15,7 +16,7 @@ public class Archer extends Hero {
     }
 
     @Override
-    public void useAbility(List<Hero> allies, Boss boss) {
+    public void useAbility(List<Hero> allies, Boss boss, Scanner scanner) {
         if (random.nextBoolean()) {
             System.out.println(name + " used Double Shot!");
             attack(boss);
