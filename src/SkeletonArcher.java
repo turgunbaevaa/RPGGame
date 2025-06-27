@@ -15,4 +15,9 @@ public class SkeletonArcher extends Enemy {
         this.speed = baseSpeed + (wave - 1) / 5;
         this.range = baseRange;
     }
+
+    @Override
+    public String getDisplaySymbol() {
+        return "S"; // Skeleton Archer symbol
+    }
 }

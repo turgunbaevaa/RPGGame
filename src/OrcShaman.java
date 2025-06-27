@@ -39,4 +39,9 @@ public class OrcShaman extends Enemy {
             // No valid heal target or out of range.
         }
     }
+
+    @Override
+    public String getDisplaySymbol() {
+        return "O"; // Orc Shaman symbol
+    }
 }

@@ -15,4 +15,9 @@ public class GoblinGrunt extends Enemy {
         this.speed = baseSpeed + (wave - 1) / 4;
         this.range = baseRange;
     }
+
+    @Override
+    public String getDisplaySymbol() {
+        return "G"; // Goblin Grunt symbol
+    }
 }

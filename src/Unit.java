@@ -1,9 +1,10 @@
+// Unit.java
 import java.util.Objects;
 
 public abstract class Unit {
     protected String name;
     protected int health;
-    protected int damage;
+    protected int damage; // Make sure this is protected so Hero can set it temporarily
     protected int range;
     protected int speed;
     protected int level;
@@ -24,7 +25,6 @@ public abstract class Unit {
     public boolean attack(Unit target) {
         if (this.position.distanceTo(target.getPosition()) <= this.range) {
             int oldTargetHealth = target.health;
-            // Clamp health to never go below 0
             target.health = Math.max(0, target.health - this.damage);
 
             System.out.printf("%s (%s) на позиции %s атакует %s (%s) на позиции %s, нанося %d урона.%n",
@@ -69,17 +69,16 @@ public abstract class Unit {
     public int getSpeed() { return speed; }
     public int getLevel() { return level; }
 
+    public void setDamage(int damage) { this.damage = damage; } // NEW METHOD
+
     public void increaseHealth(int amount) {
         this.health = Math.min(this.health + amount, getMaxHealth());
     }
 
-    // This method is primarily for upgrades, it increases the base health for calculation of getMaxHealth
     public void increaseMaxHealth(int amount) {
-        // The actual logic for increasing max health should be implemented in Hero and Enemy,
-        // as their getMaxHealth is based on baseHealth + level factors.
-        // This is a placeholder for direct health increase that might go beyond current max health if needed,
-        // but for upgrades, we directly modify baseHealth in Hero/Enemy.
-        // For now, let's just make sure increaseHealth is used for healing, and baseHealth is for upgrades.
+        // This method is problematic as noted before.
+        // For upgrades, Hero/Enemy classes should modify their baseHealth directly.
+        // Keeping it for now but note that it's probably not used as intended.
     }
 
     public void increaseDamage(int amount) { this.damage += amount; }
@@ -99,4 +98,7 @@ public abstract class Unit {
     public int hashCode() {
         return Objects.hash(name, health, damage, range, speed, level, position);
     }
+
+    // Add this abstract method for the next refactoring step
+    public abstract String getDisplaySymbol();
 }
