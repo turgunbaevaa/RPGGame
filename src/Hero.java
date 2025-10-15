@@ -30,10 +30,10 @@ public abstract class Hero extends Unit {
     @Override
     public void levelUp() {
         this.level++;
-        this.baseHealth += 30; // Common level-up bonus for all heroes
-        this.baseDamage += 7;
+        this.baseHealth += 30;
+        this.baseDamage += 10;
         this.baseSpeed += 1;
-        this.health = this.getMaxHealth(); // Heal to full on level up
+        this.health = this.getMaxHealth();
         System.out.println(this.name + " повысил уровень до " + level + "!");
     }
 

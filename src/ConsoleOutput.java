@@ -9,7 +9,7 @@ public class ConsoleOutput implements GameOutput {
 
     @Override
     public void displayError(String message) {
-        System.err.println("ОШИБКА: " + message); // Use System.err for errors
+        System.err.println("ERROR: " + message); // Use System.err for errors
     }
 
     @Override
@@ -21,10 +21,10 @@ public class ConsoleOutput implements GameOutput {
 
     @Override
     public void displayUnitStats(List<Hero> heroes, List<Enemy> enemies) {
-        System.out.println("\n--- Состояние Героев ---");
+        System.out.println("\n--- The State of Heroes ---");
         heroes.stream().filter(Unit::isAlive).forEach(hero -> {
             // Prepare the taunt status string with a leading space if it exists
-            String tauntStatus = hero.isTaunting() ? " (Провокация)" : "";
+            String tauntStatus = hero.isTaunting() ? " (Provocation)" : "";
 
             System.out.printf("  %s%s (Ур.%d) Позиция: %s, HP: %d/%d, Урон: %d, Дальность: %d, Скорость: %d%n",
                     hero.getName(),

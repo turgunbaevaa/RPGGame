@@ -12,38 +12,42 @@ public class WarriorKnockbackAbility implements HeroAbility {
                 .orElse(null);
 
         if (closest != null && board.isInRange(self, closest)) {
-            int originalDamage = self.getDamage(); // Use getter to get current damage
-            self.setDamage((int)(originalDamage * 1.5)); // Temporarily set damage
-            self.attack(closest); // Attack method now takes a Unit
-            self.setDamage(originalDamage); // Reset damage
+            // Calculate the special damage for the ability
+            int abilityDamage = (int)(self.getDamage() * 1.5);
 
-            Position oldPos = closest.getPosition();
-            int pushX = oldPos.getX();
-            int pushY = oldPos.getY();
+            // Use the new attack method that accepts a custom damage value
+            self.attackWithDamage(closest, abilityDamage);
 
-            int deltaX = oldPos.getX() - self.getPosition().getX();
-            int deltaY = oldPos.getY() - self.getPosition().getY();
+            Position currentPos = closest.getPosition();
+            Position heroPos = self.getPosition();
 
             int pushDistance = 2;
 
-            for (int i = 0; i < pushDistance; i++) {
-                int nextPushX = pushX + (deltaX != 0 ? (deltaX > 0 ? 1 : -1) : 0);
-                int nextPushY = pushY + (deltaY != 0 ? (deltaY > 0 ? 1 : -1) : 0);
+            // Calculate the vector from hero to enemy
+            int deltaX = currentPos.getX() - heroPos.getX();
+            int deltaY = currentPos.getY() - heroPos.getY();
 
-                Position potentialPushBack = new Position(nextPushX, nextPushY);
-                if (board.isValidPosition(potentialPushBack) && board.isEmpty(potentialPushBack)) {
-                    pushX = nextPushX;
-                    pushY = nextPushY;
+            // Normalize the vector to get the direction
+            int dirX = (deltaX > 0) ? 1 : (deltaX < 0) ? -1 : 0;
+            int dirY = (deltaY > 0) ? 1 : (deltaY < 0) ? -1 : 0;
+
+            Position finalPushPos = currentPos;
+
+            // Find the furthest possible empty spot in the push direction
+            for (int i = 0; i < pushDistance; i++) {
+                Position nextPos = new Position(finalPushPos.getX() + dirX, finalPushPos.getY() + dirY);
+
+                if (board.isValidPosition(nextPos) && board.isEmpty(nextPos)) {
+                    finalPushPos = nextPos;
                 } else {
+                    // Stop if we hit an obstacle or the edge of the board
                     break;
                 }
             }
 
-            Position finalPushBack = new Position(pushX, pushY);
-
-            if (!finalPushBack.equals(oldPos)) {
-                board.updatePosition(closest, finalPushBack);
-                System.out.println(closest.getName() + " отброшен на " + finalPushBack.toString() + "!");
+            if (!finalPushPos.equals(currentPos)) {
+                board.updatePosition(closest, finalPushPos);
+                System.out.println(closest.getName() + " отброшен на " + finalPushPos.toString() + "!");
             } else {
                 System.out.println(closest.getName() + " не удалось отбросить.");
             }

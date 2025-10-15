@@ -1,4 +1,3 @@
-// Enemy.java (Balance changes remain)
 import java.util.*;
 
 public abstract class Enemy extends Unit {
@@ -28,7 +27,8 @@ public abstract class Enemy extends Unit {
     }
 
     public void levelUpStats(int wave) {
-        this.health = baseHealth + (wave - 1) * 10;
+        this.baseHealth = baseHealth + (wave - 1) * 10;
+        this.health = this.baseHealth; // Set current health to new max health
         this.damage = baseDamage + (wave - 1) * 2;
         this.speed = baseSpeed + (wave - 1) / 4;
         this.range = baseRange;
@@ -44,6 +44,6 @@ public abstract class Enemy extends Unit {
     }
 
     public void useAbility(List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {
-        // Base implementation: nothing. Overridden in subclasses.
+
     }
 }

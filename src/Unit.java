@@ -1,10 +1,9 @@
-// Unit.java
 import java.util.Objects;
 
 public abstract class Unit {
     protected String name;
     protected int health;
-    protected int damage; // Make sure this is protected so Hero can set it temporarily
+    protected int damage;
     protected int range;
     protected int speed;
     protected int level;
@@ -22,15 +21,21 @@ public abstract class Unit {
 
     public abstract void move(Position targetPosition, Board board);
 
+    // This is the default attack method for normal attacks
     public boolean attack(Unit target) {
+        return attackWithDamage(target, this.damage);
+    }
+
+    // This is the new method for abilities or special attacks
+    public boolean attackWithDamage(Unit target, int damageAmount) {
         if (this.position.distanceTo(target.getPosition()) <= this.range) {
-            int oldTargetHealth = target.health;
-            target.health = Math.max(0, target.health - this.damage);
+            int oldTargetHealth = target.getHealth();
+            target.takeDamage(damageAmount); // Use the new method
 
             System.out.printf("%s (%s) на позиции %s атакует %s (%s) на позиции %s, нанося %d урона.%n",
                     this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
                     target.getName(), target.getClass().getSimpleName(), target.getPosition().toString(),
-                    this.damage);
+                    damageAmount);
             System.out.printf("   Здоровье %s: %d/%d (было %d)%n",
                     target.getName(), target.getHealth(), target.getMaxHealth(), oldTargetHealth);
 
@@ -41,6 +46,10 @@ public abstract class Unit {
             return targetDied;
         }
         return false;
+    }
+
+    public void takeDamage(int amount) {
+        this.health = Math.max(0, this.health - amount);
     }
 
     public abstract void levelUp();
@@ -69,16 +78,8 @@ public abstract class Unit {
     public int getSpeed() { return speed; }
     public int getLevel() { return level; }
 
-    public void setDamage(int damage) { this.damage = damage; } // NEW METHOD
-
     public void increaseHealth(int amount) {
         this.health = Math.min(this.health + amount, getMaxHealth());
-    }
-
-    public void increaseMaxHealth(int amount) {
-        // This method is problematic as noted before.
-        // For upgrades, Hero/Enemy classes should modify their baseHealth directly.
-        // Keeping it for now but note that it's probably not used as intended.
     }
 
     public void increaseDamage(int amount) { this.damage += amount; }
@@ -99,6 +100,5 @@ public abstract class Unit {
         return Objects.hash(name, health, damage, range, speed, level, position);
     }
 
-    // Add this abstract method for the next refactoring step
     public abstract String getDisplaySymbol();
 }

@@ -21,7 +21,7 @@ public class Board {
 
     public void placeUnit(Unit unit) {
         if (unit == null || unit.getPosition() == null) {
-            System.err.println("Ошибка: Попытка разместить null юнит или юнит с null позицией.");
+            System.err.println("Error: Attempt to delete a null unit or a unit with a null position.");
             return;
         }
         Position pos = unit.getPosition();
@@ -29,13 +29,13 @@ public class Board {
             grid[pos.getY()][pos.getX()] = unit;
             occupiedPositions.add(pos);
         } else {
-            System.err.println("Ошибка: Невозможно разместить юнит " + unit.getName() + " на " + pos.toString() + ". Позиция недействительна или занята.");
+            System.err.println("Error: Unable to place unit " + unit.getName() + " at " + pos.toString() + ". Position is invalid or occupied.");
         }
     }
 
     public void removeUnit(Unit unit) {
         if (unit == null || unit.getPosition() == null) {
-            System.err.println("Ошибка: Попытка удалить null юнит или юнит с null позицией.");
+            System.err.println("Error: Attempt to delete a null unit or a unit with a null position.");
             return;
         }
         Position pos = unit.getPosition();
@@ -45,33 +45,37 @@ public class Board {
         }
     }
 
+    // In Board.java
     public void updatePosition(Unit unit, Position newPos) {
-        if (unit == null || unit.getPosition() == null || newPos == null) {
-            System.err.println("Ошибка: Неверные данные для обновления позиции.");
+        if (unit == null || newPos == null) {
+            System.err.println("Error: Incorrect data for updating position.");
             return;
         }
 
         if (!isValidPosition(newPos)) {
-            System.err.println("Ошибка: Новая позиция " + newPos.toString() + " недействительна.");
+            System.err.println("Error: New position " + newPos.toString() + " is invalid.");
             return;
         }
 
         // Check if the new position is occupied by another unit (excluding the unit itself)
-        if (grid[newPos.getY()][newPos.getX()] != null && grid[newPos.getY()][newPos.getX()] != unit) {
-            System.err.println("Ошибка: Позиция " + newPos.toString() + " занята другим юнитом.");
+        Unit unitAtNewPos = grid[newPos.getY()][newPos.getX()];
+        if (unitAtNewPos != null && unitAtNewPos != unit) {
+            System.err.println("Error: Position " + newPos.toString() + " occupied by another unit.");
             return;
         }
 
-        // Only remove from old position if it's the same unit
+        // 1. Remove unit from old position
         Position oldPos = unit.getPosition();
-        if (grid[oldPos.getY()][oldPos.getX()] == unit) {
+        if (oldPos != null && isValidPosition(oldPos) && grid[oldPos.getY()][oldPos.getX()] == unit) {
             grid[oldPos.getY()][oldPos.getX()] = null;
             occupiedPositions.remove(oldPos);
         }
+        // Note: The unit's oldPos can be null if it's placed for the very first time (though setup should handle this)
 
+        // 2. Place unit in new position
         grid[newPos.getY()][newPos.getX()] = unit;
         occupiedPositions.add(newPos);
-        unit.setPosition(newPos);
+        unit.setPosition(newPos); // Crucial step: update the unit's internal position
     }
 
     public Unit getUnitAt(Position pos) {

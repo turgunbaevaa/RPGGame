@@ -1,32 +1,31 @@
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ArcherMultiShotAbility implements HeroAbility {
+
+    private static final int MAX_TARGETS = 3;
+
     @Override
     public void use(Hero self, List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {
-        System.out.println(self.getName() + " использует 'Множественный выстрел'");
-        boolean attackedSomeone = false;
+        System.out.println(self.getName() + " uses 'Multiple Shot' on up to " + MAX_TARGETS + " targets.");
+
         List<Enemy> targets = allEnemies.stream()
                 .filter(Enemy::isAlive)
-                .filter(e -> self.getPosition().distanceTo(e.getPosition()) <= self.getRange()) // Use getter for range
-                .collect(Collectors.toList());
+                .filter(e -> self.getPosition().distanceTo(e.getPosition()) <= self.getRange())
+                // **NEW: Order by distance and limit the count**
+                .sorted(Comparator.comparingInt(e -> self.getPosition().distanceTo(e.getPosition())))
+                .limit(MAX_TARGETS)
+                .toList();
 
         if (targets.isEmpty()) {
-            System.out.println("Нет врагов в зоне досягаемости для 'Множественного выстрела'.");
+            System.out.println("No enemies within range for ‘Multi Shot’.");
             return;
         }
 
-        int originalDamage = self.getDamage(); // Use getter
-        self.setDamage(originalDamage / 2); // Temporarily set damage
-
+        int multiShotDamage = self.getDamage() / 2; // Calculate the damage
         for (Enemy e : targets) {
-            self.attack(e);
-            attackedSomeone = true;
+            self.attackWithDamage(e, multiShotDamage); // Use the new method
         }
-        self.setDamage(originalDamage); // Reset damage
-
-        if (!attackedSomeone) {
-            System.out.println("Ошибка при использовании способности: нет врагов в зоне досягаемости.");
-        }
+        System.out.println("Multiple shots are completed.");
     }
 }

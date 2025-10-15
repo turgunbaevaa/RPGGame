@@ -8,16 +8,17 @@ public class HealerHealAbility implements HeroAbility {
     @Override
     public void use(Hero self, List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {
         System.out.println(self.getName() + " использует 'Исцеление союзника'");
-        // Find the most wounded hero (lowest percentage health)
+
         Hero target = allHeroes.stream()
                 .filter(h -> h.isAlive() && h.getHealth() < h.getMaxHealth())
-                .min(Comparator.comparingDouble(h -> (double)h.getHealth() / h.getMaxHealth())) // Target lowest percentage
+                // **NEW: Filter by range first**
+                .filter(h -> self.getPosition().distanceTo(h.getPosition()) <= self.getRange())
+                .min(Comparator.comparingDouble(h -> (double)h.getHealth() / h.getMaxHealth()))
                 .orElse(null);
 
         if (target == null) {
-            System.out.println("Нет раненых союзников поблизости.");
-        } else if (self.getPosition().distanceTo(target.getPosition()) > self.getRange()) { // Use getter for range
-            System.out.println("Цель для лечения вне досягаемости.");
+            // This covers both "No wounded allies" and "No reachable wounded allies."
+            System.out.println("Нет раненых союзников в пределах досягаемости.");
         } else {
             target.increaseHealth(HEAL_AMOUNT);
             System.out.println("Исцелен " + target.getName() + " на позиции " + target.getPosition().toString() + ". Здоровье: " + target.getHealth() + "/" + target.getMaxHealth());
