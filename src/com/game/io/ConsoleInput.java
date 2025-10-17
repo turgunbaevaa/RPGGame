@@ -40,7 +40,7 @@ public class ConsoleInput implements GameInput {
         String[] parts = coordsInput.split(" ");
 
         if (parts.length < 2) {
-            throw new GameException("Неверный формат координат. Введите два числа через пробел (X Y).");
+            throw new GameException("Incorrect coordinate format. Enter two numbers separated by a space (X Y).");
         }
 
         try {
@@ -48,7 +48,7 @@ public class ConsoleInput implements GameInput {
             int y = Integer.parseInt(parts[1]);
             return new Position(x, y);
         } catch (NumberFormatException e) {
-            throw new GameException("Координаты должны быть целыми числами.");
+            throw new GameException("Coordinates must be integers.");
         }
     }
 }

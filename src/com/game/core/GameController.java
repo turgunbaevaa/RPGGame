@@ -24,7 +24,7 @@ public class GameController {
     private final List<Hero> heroes;
     private final List<Enemy> enemies;
     private int turnCount = 0;
-    private final int MAX_TURNS = 50;
+    private final int MAX_TURNS = 10;
     private final int MAX_WAVES = 5;
     private int wave = 1;
     private int gold = 0;
@@ -58,7 +58,7 @@ public class GameController {
             pos = new Position(x, y);
             attempts++;
             if (attempts > 1000) {
-                output.displayError("Не удалось найти свободное место после множества попыток. Возможно, доска заполнена.");
+                output.displayError("Unable to find an available spot after numerous attempts. The board may be full.");
                 return null;
             }
         } while (!board.isEmpty(pos));
@@ -66,7 +66,6 @@ public class GameController {
     }
 
     private void setupHeroes() {
-        // Cleanup logic simplified to ensure all unit references are clear
         heroes.forEach(board::removeUnit);
         heroes.clear();
 
@@ -79,7 +78,7 @@ public class GameController {
                 heroes.add(hero);
                 board.placeUnit(hero);
             } else {
-                output.displayError("Не удалось разместить героя " + type + " из-за отсутствия свободных мест.");
+                output.displayError("Unable to place hero " + type + " due to lack of available slots.");
             }
         }
     }
@@ -89,12 +88,12 @@ public class GameController {
         enemies.clear();
 
         int enemyCount = 3 + wave;
-        output.displayMessage("\n--- СПАВН ВРАГОВ ---");
+        output.displayMessage("\n--- ENEMIES SPAWN ---");
 
         for (int i = 0; i < enemyCount; i++) {
             Position spawnPos = getRandomEmptyPosition(5, 9, 5, 9);
             if (spawnPos == null) {
-                output.displayError("Невозможно найти место для спавна врага #" + (i + 1) + ". Возможно, карта заполнена.");
+                output.displayError("Unable to locate enemy spawn point #" + (i + 1) + ". The map may be full.");
                 break;
             }
 
@@ -103,12 +102,12 @@ public class GameController {
 
             enemies.add(enemy);
             board.placeUnit(enemy);
-            output.displayMessage(String.format("Враг %s (%s) создан на %s. HP: %d/%d, Урон: %d, Золото: %d",
+            output.displayMessage(String.format("Enemy %s (%s) created on %s. HP: %d/%d, Damage: %d, Gold: %d",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
                     enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(), enemy.getGoldValue()));
         }
 
-        output.displayMessage("⚔️ Волна " + wave + " началась! Врагов: " + enemies.size());
+        output.displayMessage("⚔️ Wave has " + wave + " started! Enemies: " + enemies.size());
     }
 
     private EnemyType selectRandomEnemyType() {
@@ -127,13 +126,13 @@ public class GameController {
     public void startGame() {
         // ... (unchanged while loop and phase structure)
         while (turnCount < MAX_TURNS && !isGameOver()) {
-            output.displayMessage("\n===== ХОД " + (turnCount + 1) + " =====");
+            output.displayMessage("\n===== MOVE " + (turnCount + 1) + " =====");
             output.printBoard(board, heroes, enemies);
             output.displayUnitStats(heroes, enemies);
-            output.displayMessage("💰 Золото: " + gold);
+            output.displayMessage("💰 GOLD: " + gold);
 
             // --- HERO PHASE ---
-            output.displayMessage("\n--- ФАЗА ГЕРОЕВ ---");
+            output.displayMessage("\n--- HEROES PHASE ---");
             for (Hero hero : heroes) {
                 if (hero.isAlive()) {
                     playerTurnIndividual(hero);
@@ -144,7 +143,7 @@ public class GameController {
             }
 
             // --- ENEMY PHASE ---
-            output.displayMessage("\n--- ФАЗА ВРАГОВ ---");
+            output.displayMessage("\n--- ENEMIES PHASE ---");
 
             List<Enemy> currentEnemies = new ArrayList<>(enemies);
             for (Enemy enemy : currentEnemies) {
@@ -169,7 +168,7 @@ public class GameController {
 
     // Extracted wave completion logic
     private void handleWaveCompletion() {
-        output.displayMessage("\n🌟 Волна " + wave + " пройдена!");
+        output.displayMessage("\n🌟 Wave " + wave + " is over!");
 
         heroes.stream().filter(Hero::isAlive).forEach(Hero::levelUp);
 
@@ -186,7 +185,7 @@ public class GameController {
     // --- PLAYER ACTIONS (Refactored) ---
 
     private void playerTurnIndividual(Hero hero) {
-        output.displayMessage("\n--- Ход Героя: " + hero.getName() + " (HP: " + hero.getHealth() + "/" + hero.getMaxHealth() + ") ---");
+        output.displayMessage("\n--- Hero's turn: " + hero.getName() + " (HP: " + hero.getHealth() + "/" + hero.getMaxHealth() + ") ---");
 
         // Simplified nearby enemy check for readability
         enemies.stream()
@@ -200,40 +199,40 @@ public class GameController {
                 case 1 -> handleHeroMovement(hero);
                 case 2 -> handleHeroAttack(hero);
                 case 3 -> hero.useAbility(heroes, enemies, board);
-                default -> throw new GameException("Неверный выбор. Ход пропущен.");
+                default -> throw new GameException("Wrong choice. Turn skipped.");
             }
         } catch (GameException e) {
             output.displayError(e.getMessage());
         } catch (Exception e) { // Catch other potential exceptions (like NumberFormatException from PositionInput)
-            output.displayError("Ошибка ввода: " + e.getMessage());
+            output.displayError("Input error: " + e.getMessage());
         }
     }
 
     private String buildHeroMenu(Hero hero) {
         StringBuilder menu = new StringBuilder();
-        menu.append("1. Двигаться (макс. ").append(hero.getSpeed()).append(" клеток)\n");
+        menu.append("1. Move (max. ").append(hero.getSpeed()).append(" cells)\n");
         if (!(hero instanceof Healer)) {
-            menu.append("2. Атаковать\n");
+            menu.append("2. Attack\n");
         }
-        menu.append("3. Способность\n");
-        menu.append("Ваш выбор: ");
+        menu.append("3. Ability\n");
+        menu.append("Your choice is : ");
         return menu.toString();
     }
 
     private void handleHeroMovement(Hero hero) throws GameException {
-        Position newPos = input.getPositionInput("Введите координаты X Y для передвижения (через пробел): ");
+        Position newPos = input.getPositionInput("Enter the X and Y coordinates for movement (separated by a space): ");
 
         if (!board.isValidPosition(newPos)) {
-            throw new GameException("Позиция вне границ карты.");
+            throw new GameException("Position outside the map boundaries.");
         }
 
         Unit unitAtNewPos = board.getUnitAt(newPos);
         if (unitAtNewPos != null && unitAtNewPos != hero) {
-            throw new GameException("Позиция занята другим юнитом.");
+            throw new GameException("The position is occupied by another unit.");
         }
 
         if (hero.getPosition().distanceTo(newPos) > hero.getSpeed()) {
-            throw new GameException("Слишком далеко. Лимит передвижения: " + hero.getSpeed() + " клеток.");
+            throw new GameException("Too far. Movement limit: " + hero.getSpeed() + " cells.");
         }
 
         hero.move(newPos, board);
@@ -241,10 +240,10 @@ public class GameController {
 
     private void handleHeroAttack(Hero hero) throws GameException {
         if (hero instanceof Healer) {
-            throw new GameException("Целитель не может атаковать!");
+            throw new GameException("The healer cannot attack!");
         }
 
-        output.displayMessage(hero.getName() + " атакует врагов в пределах " + hero.getRange() + " клетки(ок).");
+        output.displayMessage(hero.getName() + " attacks enemies within " + hero.getRange() + " cells.");
         Enemy target = chooseTarget(hero);
 
         if (target != null) {
@@ -253,50 +252,64 @@ public class GameController {
             } else {
                 // This check is redundant if chooseTarget only shows in-range targets,
                 // but kept for robustness if input allows out-of-range selection.
-                throw new GameException("Цель вне досягаемости.");
+                throw new GameException("The goal is out of reach.");
             }
         } else {
-            output.displayMessage("Атака отменена или нет доступных целей.");
+            output.displayMessage("The attack is canceled or there are no available targets.");
         }
     }
 
     // --- ENEMY AI ---
 
     private void performEnemyAction(Enemy enemy) {
-        output.displayMessage("\n--- Ход Врага: " + enemy.getName() + " (" + enemy.getClass().getSimpleName() + ") ---");
+        output.displayMessage("\n--- Enemies turn: " + enemy.getName() + " (" + enemy.getClass().getSimpleName() + ") ---");
 
-        if (enemy instanceof OrcShaman) {
-            enemy.useAbility(heroes, enemies, board);
-        }
-
-        Hero target = findClosestHero(enemy);
-        if (target == null) {
-            output.displayMessage(enemy.getName() + " на " + enemy.getPosition().toString() + " не нашел цели.");
+        Hero targetHero = findClosestHero(enemy);
+        if (targetHero == null) {
+            output.displayMessage(enemy.getName() + " has not found a target and ends its turn.");
             return;
         }
 
         Position originalPosition = enemy.getPosition();
 
-        // 1. Move
-        if (!board.isInRange(enemy, target)) {
-            moveToward(enemy, target.getPosition());
-            if (!enemy.getPosition().equals(originalPosition)) {
-                output.displayMessage(String.format("%s (%s) движется к %s. Текущая позиция: %s",
-                        enemy.getName(), enemy.getClass().getSimpleName(), target.getName(), enemy.getPosition().toString()));
+        // --- 1. ABILITY CHECK (OrcShaman Healing Priority) ---
+        if (enemy instanceof OrcShaman) {
+            // Shaman priority: Heal if a nearby ally is critically wounded (<= 50% HP)
+            Enemy woundedAlly = findWoundedAlly(enemies);
+
+            // Use ability ONLY if a critically wounded ally is found
+            if (woundedAlly != null) {
+                enemy.useAbility(heroes, enemies, board);
+
+                // The Shaman's turn continues to move/attack after healing if it can.
+                // No 'return' here because Shamans can heal AND attack/move in the same turn.
             }
         }
 
-        // 2. Attack
-        if (board.isInRange(enemy, target)) {
-            output.displayMessage(String.format("%s (%s) на позиции %s атакует %s (%s) на позиции %s.",
+        // --- 2. MOVEMENT ---
+        // If enemy cannot attack the primary target, attempt to move.
+        if (!board.isInRange(enemy, targetHero)) {
+            moveToward(enemy, targetHero.getPosition());
+
+            // Output movement message
+            if (!enemy.getPosition().equals(originalPosition)) {
+                output.displayMessage(String.format("%s (%s) moves to %s. Current position: %s",
+                        enemy.getName(), enemy.getClass().getSimpleName(), targetHero.getName(), enemy.getPosition().toString()));
+            }
+        }
+
+        // --- 3. ATTACK ---
+        if (board.isInRange(enemy, targetHero)) {
+            output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s.",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
-                    target.getName(), target.getClass().getSimpleName(), target.getPosition().toString()));
-            enemy.attack(target);
+                    targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
+            enemy.attack(targetHero);
         } else {
+            // Output stuck message ONLY if no movement occurred AND no attack was possible.
             if (enemy.getPosition().equals(originalPosition)) {
-                output.displayMessage(enemy.getName() + " не смог добраться до цели или уже был рядом, но не в диапазоне.");
+                output.displayMessage(enemy.getName() + " could not reach the target or was already close, but not within range.");
             } else {
-                output.displayMessage(enemy.getName() + " переместился, но цель все еще вне досягаемости.");
+                output.displayMessage(enemy.getName() + " moved, but the goal is still out of reach.");
             }
         }
     }
@@ -329,9 +342,9 @@ public class GameController {
             return null;
         }
 
-        String inputChoice = input.getStringInput("Выберите номер цели или введите 'q' для отмены: ");
+        String inputChoice = input.getStringInput("Select the target number or enter 'q' to cancel: ");
         if (inputChoice.equalsIgnoreCase("q")) {
-            output.displayMessage("Выбор цели отменен.");
+            output.displayMessage("Target selection canceled.");
             return null;
         }
 
@@ -340,10 +353,10 @@ public class GameController {
             if (idx >= 0 && idx < inRangeEnemies.size()) {
                 return inRangeEnemies.get(idx);
             } else {
-                output.displayError("Неверный номер цели.");
+                output.displayError("Incorrect target number.");
             }
         } catch (NumberFormatException e) {
-            output.displayError("Неверный ввод. Введите номер.");
+            output.displayError("Incorrect entry. Please enter the number.");
         }
         return null;
     }
@@ -356,7 +369,7 @@ public class GameController {
             if (!enemy.isAlive()) {
                 board.removeUnit(enemy);
                 gold += enemy.getGoldValue();
-                output.displayMessage(String.format("   %s (%s) был устранен. Получено %d золота. Всего золота: %d%n",
+                output.displayMessage(String.format("   %s (%s) was eliminated. Received %d gold(s). Total gold: %d%n",
                         enemy.getName(), enemy.getClass().getSimpleName(), enemy.getGoldValue(), gold));
                 return true;
             }
@@ -366,8 +379,23 @@ public class GameController {
         // Remove dead heroes from the board
         heroes.stream().filter(h -> !h.isAlive()).forEach(hero -> {
             board.removeUnit(hero);
-            output.displayMessage("Герой " + hero.getName() + " на " + hero.getPosition().toString() + " пал.");
+            output.displayMessage("Hero " + hero.getName() + " at position " + hero.getPosition().toString() + " fall.");
         });
+    }
+
+    /**
+     * Finds the most wounded living enemy unit.
+     * Only targets enemies below 50% health for 'critical' healing priority.
+     * Used by OrcShaman AI.
+     */
+    private Enemy findWoundedAlly(List<Enemy> enemies) {
+        return enemies.stream()
+                .filter(Enemy::isAlive)
+                // Filter for targets critically wounded (50% or less HP)
+                .filter(e -> (double)e.getHealth() / e.getMaxHealth() <= 0.5)
+                // Find the one with the lowest absolute current HP
+                .min(Comparator.comparingInt(Enemy::getHealth))
+                .orElse(null);
     }
 
     // --- SHOP (Refactored) ---
@@ -376,16 +404,16 @@ public class GameController {
         output.displayShop(gold, heroes);
 
         while (true) {
-            int choice = input.getIntInput("Выберите апгрейд или '5' для выхода: ");
+            int choice = input.getIntInput("Select upgrade or ‘5’ to exit: ");
 
             if (choice == 5) {
-                output.displayMessage("Выход из магазина.");
+                output.displayMessage("Exiting the store.");
                 break;
             }
 
             List<Hero> aliveHeroes = heroes.stream().filter(Hero::isAlive).collect(Collectors.toList());
             if (aliveHeroes.isEmpty()) {
-                output.displayMessage("Нет живых героев для апгрейда.");
+                output.displayMessage("No alive heroes to upgrade.");
                 continue;
             }
 
@@ -397,12 +425,12 @@ public class GameController {
     }
 
     private Hero selectHeroForUpgrade(List<Hero> aliveHeroes) {
-        int heroIndex = input.getIntInput("Введите номер героя: ");
+        int heroIndex = input.getIntInput("Enter hero number: ");
 
         if (heroIndex >= 0 && heroIndex < aliveHeroes.size()) {
             return aliveHeroes.get(heroIndex);
         } else {
-            output.displayError("Неверный номер героя.");
+            output.displayError("Incorrect hero number.");
             return null;
         }
     }
@@ -413,22 +441,22 @@ public class GameController {
 
         switch (choice) {
             case 1: cost = 20; upgradeType = "HP"; break;
-            case 2: cost = 15; upgradeType = "Урон"; break;
-            case 3: cost = 25; upgradeType = "Скорость"; break;
-            case 4: cost = 20; upgradeType = "Дальность"; break;
+            case 2: cost = 15; upgradeType = "Damage"; break;
+            case 3: cost = 25; upgradeType = "Speed"; break;
+            case 4: cost = 20; upgradeType = "Range"; break;
             default:
-                output.displayError("Неверный выбор апгрейда.");
+                output.displayError("Incorrect upgrade selection.");
                 return;
         }
 
         if (gold >= cost) {
             gold -= cost;
             applyUpgrade(choice, targetHero);
-            output.displayMessage(String.format("Успешно улучшен %s %s на %s. Золото: %d%n",
+            output.displayMessage(String.format("Successfully improved %s %s by %s. Gold: %d%n",
                     targetHero.getName(), upgradeType, targetHero.getPosition().toString(), gold));
             output.displayUnitStats(heroes, enemies);
         } else {
-            output.displayMessage(String.format("Недостаточно золота для этого апгрейда! Вам нужно %d, у вас %d.", cost, gold));
+            output.displayMessage(String.format("Not enough gold for this upgrade! You need %d, you have %d.", cost, gold));
         }
     }
 
@@ -450,22 +478,22 @@ public class GameController {
     }
 
     private void concludeGame() {
-        output.displayMessage("\n===== ИГРА ОКОНЧЕНА =====");
+        output.displayMessage("\n===== GAME IS OVER =====");
         if (heroes.stream().noneMatch(Hero::isAlive)) {
-            output.displayMessage("Поражение. Все герои пали.");
+            output.displayMessage("Defeat. All heroes have fallen.");
         } else if (wave > MAX_WAVES) {
-            output.displayMessage("🏆 Победа! Все " + MAX_WAVES + " волн отбиты!");
+            output.displayMessage("🏆 Victory! All " + MAX_WAVES + " waves repelled!");
         } else {
-            output.displayMessage("Игра завершена. Количество ходов: " + turnCount);
+            output.displayMessage("The game is over. Number of moves: " + turnCount);
         }
         // ... (rest of the conclusion output)
-        output.displayMessage("\n--- Итоговый счет ---");
-        output.displayMessage("Волн пройдено: " + (wave - 1));
-        output.displayMessage("Оставшееся золото: " + gold);
-        output.displayMessage("Герои:");
+        output.displayMessage("\n--- Final score ---");
+        output.displayMessage("Waves passed: " + (wave - 1));
+        output.displayMessage("Remaining gold: " + gold);
+        output.displayMessage("Heroes:");
         heroes.forEach(hero ->
-                output.displayMessage(String.format("  %s: %s (Ур.%d) HP: %d/%d, Урон: %d, Дальность: %d, Скорость: %d",
-                        hero.getName(), hero.isAlive() ? "Жив" : "Пал",
+                output.displayMessage(String.format("  %s: %s (Ур.%d) HP: %d/%d, Damage: %d, Range: %d, Speed: %d",
+                        hero.getName(), hero.isAlive() ? "Alive" : "Fell",
                         hero.getLevel(), hero.getHealth(), hero.getMaxHealth(),
                         hero.getDamage(), hero.getRange(), hero.getSpeed()))
         );
@@ -474,12 +502,14 @@ public class GameController {
     // Keeping moveToward as it is, since its logic is already quite complex and well-contained.
     private void moveToward(Enemy enemy, Position targetPos) {
         Position current = enemy.getPosition();
-        Position bestNextPos = current;
+        Position bestNextPos = current; // Default: stay put
         int minDistance = current.distanceTo(targetPos);
 
+        // 1. Generate all possible move positions based on speed
         List<Position> possibleMoves = new ArrayList<>();
         for (int dx = -enemy.getSpeed(); dx <= enemy.getSpeed(); dx++) {
             for (int dy = -enemy.getSpeed(); dy <= enemy.getSpeed(); dy++) {
+                // Check Manhattan distance for movement limit
                 if (Math.abs(dx) + Math.abs(dy) <= enemy.getSpeed()) {
                     Position potentialNext = new Position(current.x() + dx, current.y() + dy);
                     if (board.isValidPosition(potentialNext)) {
@@ -492,22 +522,37 @@ public class GameController {
         // Sort moves to prioritize those that close the distance the most
         possibleMoves.sort(Comparator.comparingInt(pos -> pos.distanceTo(targetPos)));
 
-        // Try to find the best empty spot that is closer to the target
+        // 2. Find the STRICTLY BEST (closest distance) empty spot
+        Position bestCloserSpot = current;
         for (Position move : possibleMoves) {
             if (board.isEmpty(move)) {
                 if (move.distanceTo(targetPos) < minDistance) {
-                    bestNextPos = move;
-                    break;
+                    bestCloserSpot = move;
+                    break; // Found the best spot that closes the distance, we can stop
                 }
             }
         }
 
-        // If the best move is a position that would allow an attack, take it.
-        // Otherwise, move to the best available empty spot.
+        // 3. Determine Final Position
+        if (!bestCloserSpot.equals(current)) {
+            // If we found a spot that is strictly closer, use it.
+            bestNextPos = bestCloserSpot;
+        } else {
+            // If no strictly closer spot was found (e.g., blocked or already adjacent)
+            // search for ANY valid, empty, reachable spot as a backup move
+            for (Position move : possibleMoves) {
+                if (board.isEmpty(move)) {
+                    bestNextPos = move;
+                    break; // Use the first available spot found (which is the one that minimizes distance best after sorting)
+                }
+            }
+        }
+
+        // 4. Execute Movement
         if (!bestNextPos.equals(current)) {
             board.updatePosition(enemy, bestNextPos);
         } else {
-            output.displayMessage(enemy.getName() + " не смог найти свободное место для передвижения и застрял.");
+            output.displayMessage(enemy.getName() + " couldn't find a free space to move and got stuck.");
         }
     }
 }

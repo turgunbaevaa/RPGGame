@@ -36,16 +36,16 @@ public abstract class Unit {
             int oldTargetHealth = target.getHealth();
             target.takeDamage(damageAmount); // Use the new method
 
-            System.out.printf("%s (%s) на позиции %s атакует %s (%s) на позиции %s, нанося %d урона.%n",
+            System.out.printf("%s (%s) at position %s attacks %s (%s) at position %s, dealing %d damage.%n",
                     this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
                     target.getName(), target.getClass().getSimpleName(), target.getPosition().toString(),
                     damageAmount);
-            System.out.printf("   Здоровье %s: %d/%d (было %d)%n",
+            System.out.printf("   Health %s: %d/%d (was %d)%n",
                     target.getName(), target.getHealth(), target.getMaxHealth(), oldTargetHealth);
 
             boolean targetDied = !target.isAlive();
             if (targetDied) {
-                System.out.printf("   %s (%s) был побежден!%n", target.getName(), target.getClass().getSimpleName());
+                System.out.printf("   %s (%s) was defeated!%n", target.getName(), target.getClass().getSimpleName());
             }
         }
     }

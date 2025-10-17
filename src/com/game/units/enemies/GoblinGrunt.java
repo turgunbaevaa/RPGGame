@@ -4,7 +4,7 @@ import com.game.units.Enemy;
 
 public class GoblinGrunt extends Enemy {
     public GoblinGrunt(Position position) {
-        super("Гоблин", 70, 15, 1, 2, position, 5);
+        super("Goblin", 70, 15, 1, 2, position, 5);
     }
 
     @Override

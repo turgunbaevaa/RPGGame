@@ -5,7 +5,7 @@ import com.game.abilities.ArcherMultiShotAbility;
 
 public class Archer extends Hero {
     public Archer(Position position) {
-        super("com.game.units.heroes.Archer", 90, 35, 3, 2, position, 1, new ArcherMultiShotAbility());
+        super("Archer", 90, 35, 3, 2, position, 1, new ArcherMultiShotAbility());
     }
 
     @Override

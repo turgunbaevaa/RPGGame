@@ -13,7 +13,7 @@ public class OrcShaman extends Enemy {
     private final int healRange = 2;
 
     public OrcShaman(Position position) {
-        super("Орк-Шаман", 100, 5, 1, 2, position, 12);
+        super("Orc-Shaman", 100, 5, 1, 2, position, 12);
     }
 
     @Override
@@ -42,11 +42,11 @@ public class OrcShaman extends Enemy {
 
         if (targetToHeal.isPresent()) {
             targetToHeal.get().increaseHealth(this.healAmount);
-            System.out.printf("%s (%s) на позиции %s исцеляет %s на %d здоровья. Здоровье цели: %d/%d.%n",
+            System.out.printf("%s (%s) at position %s heals %s by %d health. Health of the target: %d/%d.%n",
                     this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
                     targetToHeal.get().getName(), this.healAmount, targetToHeal.get().getHealth(), targetToHeal.get().getMaxHealth());
         } else {
-            System.out.printf("%s (%s) ищет цель для исцеления, но не находит раненого союзника в пределах %d клеток.%n",
+            System.out.printf("%s (%s) searches for a target to heal, but finds no wounded ally within %d cells.%n",
                     this.getName(), this.getClass().getSimpleName(), this.healRange);
         }
     }

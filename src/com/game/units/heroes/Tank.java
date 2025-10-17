@@ -5,7 +5,7 @@ import com.game.abilities.TankTauntAbility;
 
 public class Tank extends Hero {
     public Tank(Position position) {
-        super("Танк", 250, 15, 1, 2, position, 1, new TankTauntAbility());
+        super("Tank", 100, 15, 1, 2, position, 1, new TankTauntAbility());
     }
 
     @Override

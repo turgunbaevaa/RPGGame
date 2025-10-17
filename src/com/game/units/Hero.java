@@ -25,7 +25,7 @@ public abstract class Hero extends Unit {
     @Override
     public void move(Position targetPosition, Board board) {
         board.updatePosition(this, targetPosition);
-        System.out.println(this.name + " переместился на " + targetPosition.toString());
+        System.out.println(this.name + " moved to " + targetPosition.toString());
     }
 
     @Override
@@ -35,7 +35,7 @@ public abstract class Hero extends Unit {
         this.baseDamage += 10;
         this.baseSpeed += 1;
         this.health = this.getMaxHealth();
-        System.out.println(this.name + " повысил уровень до " + level + "!");
+        System.out.println(this.name + " increased the level to " + level + "!");
     }
 
     @Override
@@ -47,7 +47,7 @@ public abstract class Hero extends Unit {
         if (this.ability != null) {
             this.ability.use(this, allHeroes, allEnemies, board);
         } else {
-            System.out.println("Ошибка: У этого героя нет назначенной способности.");
+            System.out.println("Error: This character has no assigned ability.");
         }
     }
 
@@ -58,9 +58,9 @@ public abstract class Hero extends Unit {
     public void setTaunting(boolean taunting) {
         this.isTaunting = taunting;
         if (taunting) {
-            System.out.println(this.name + " теперь провоцирует!");
+            System.out.println(this.name + " is now provoking!");
         } else {
-            System.out.println(this.name + " больше не провоцирует.");
+            System.out.println(this.name + " no longer provokes.");
         }
     }
 

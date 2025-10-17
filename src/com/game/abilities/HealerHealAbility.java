@@ -12,7 +12,7 @@ public class HealerHealAbility implements HeroAbility {
 
     @Override
     public void use(Hero self, List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {
-        System.out.println(self.getName() + " использует 'Исцеление союзника'");
+        System.out.println(self.getName() + " uses 'Heal Ally'");
 
         Hero target = allHeroes.stream()
                 .filter(h -> h.isAlive() && h.getHealth() < h.getMaxHealth())
@@ -23,10 +23,10 @@ public class HealerHealAbility implements HeroAbility {
 
         if (target == null) {
             // This covers both "No wounded allies" and "No reachable wounded allies."
-            System.out.println("Нет раненых союзников в пределах досягаемости.");
+            System.out.println("There are no wounded allies within range.");
         } else {
             target.increaseHealth(HEAL_AMOUNT);
-            System.out.println("Исцелен " + target.getName() + " на позиции " + target.getPosition().toString() + ". Здоровье: " + target.getHealth() + "/" + target.getMaxHealth());
+            System.out.println("Healed " + target.getName() + " at position " + target.getPosition().toString() + ". Health: " + target.getHealth() + "/" + target.getMaxHealth());
         }
     }
 }

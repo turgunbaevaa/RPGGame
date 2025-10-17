@@ -12,7 +12,7 @@ public class WarriorKnockbackAbility implements HeroAbility {
 
     @Override
     public void use(Hero self, List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {
-        System.out.println(self.getName() + " использует 'Удар с отбрасыванием'");
+        System.out.println(self.getName() + " uses 'Knockdown blow'");
         Enemy closest = allEnemies.stream()
                 .filter(Enemy::isAlive)
                 .min(Comparator.comparingInt(e -> e.getPosition().distanceTo(self.getPosition())))
@@ -55,12 +55,12 @@ public class WarriorKnockbackAbility implements HeroAbility {
             if (!finalPushPos.equals(currentPos)) {
                 board.updatePosition(closest, finalPushPos);
                 // 🛠️ OPTIMIZATION: Removed redundant .toString() call
-                System.out.println(closest.getName() + " отброшен на " + finalPushPos + "!");
+                System.out.println(closest.getName() + " discarded on " + finalPushPos + "!");
             } else {
-                System.out.println(closest.getName() + " не удалось отбросить.");
+                System.out.println(closest.getName() + " couldn't discard.");
             }
         } else {
-            System.out.println("Нет цели для 'Удара с отбрасыванием' или цель вне досягаемости.");
+            System.out.println("There is no target for 'Knockback Strike' or the target is out of range.");
         }
     }
 }

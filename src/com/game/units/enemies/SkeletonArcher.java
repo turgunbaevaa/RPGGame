@@ -4,7 +4,7 @@ import com.game.units.Enemy;
 
 public class SkeletonArcher extends Enemy {
     public SkeletonArcher(Position position) {
-        super("Скелет-Лучник", 50, 10, 4, 1, position, 8);
+        super("Skeleton-Archer", 50, 10, 4, 1, position, 8);
     }
 
     @Override
