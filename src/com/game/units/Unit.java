@@ -34,19 +34,20 @@ public abstract class Unit {
     public void attackWithDamage(Unit target, int damageAmount) {
         if (this.position.distanceTo(target.getPosition()) <= this.range) {
             int oldTargetHealth = target.getHealth();
-            target.takeDamage(damageAmount); // Use the new method
+            target.takeDamage(damageAmount);
 
-            System.out.printf("%s (%s) at position %s attacks %s (%s) at position %s, dealing %d damage.%n",
+            System.out.printf("%s (%s) на позиции %s атакует %s (%s) на позиции %s, нанося %d урона.%n",
                     this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
                     target.getName(), target.getClass().getSimpleName(), target.getPosition().toString(),
                     damageAmount);
-            System.out.printf("   Health %s: %d/%d (was %d)%n",
+            System.out.printf("   Здоровье %s: %d/%d (было %d)%n",
                     target.getName(), target.getHealth(), target.getMaxHealth(), oldTargetHealth);
 
             boolean targetDied = !target.isAlive();
             if (targetDied) {
-                System.out.printf("   %s (%s) was defeated!%n", target.getName(), target.getClass().getSimpleName());
+                System.out.printf("   %s (%s) был повержен!%n", target.getName(), target.getClass().getSimpleName());
             }
+
         }
     }
 

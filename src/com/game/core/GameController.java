@@ -124,7 +124,6 @@ public class GameController {
     // --- GAME LOOP ---
 
     public void startGame() {
-        // ... (unchanged while loop and phase structure)
         while (turnCount < MAX_TURNS && !isGameOver()) {
             output.displayMessage("\n===== MOVE " + (turnCount + 1) + " =====");
             output.printBoard(board, heroes, enemies);
@@ -133,29 +132,38 @@ public class GameController {
 
             // --- HERO PHASE ---
             output.displayMessage("\n--- HEROES PHASE ---");
+            // 1. Process all hero actions
             for (Hero hero : heroes) {
                 if (hero.isAlive()) {
                     playerTurnIndividual(hero);
-                    cleanupDeadUnits();
-                    output.printBoard(board, heroes, enemies);
-                    output.displayUnitStats(heroes, enemies);
                 }
             }
+            // 2. Cleanup and printing occur ONCE after all heroes have acted
+            cleanupDeadUnits();
+            output.printBoard(board, heroes, enemies);
+            output.displayUnitStats(heroes, enemies);
+
 
             // --- ENEMY PHASE ---
             output.displayMessage("\n--- ENEMIES PHASE ---");
 
+            // 1. Use a copy to safely iterate over the starting enemies list
             List<Enemy> currentEnemies = new ArrayList<>(enemies);
             for (Enemy enemy : currentEnemies) {
+                // Only act if the enemy is still alive (it might have died during a hero's previous turn/ability)
                 if (enemy.isAlive()) {
                     performEnemyAction(enemy);
-                    cleanupDeadUnits();
-                    output.printBoard(board, heroes, enemies);
-                    output.displayUnitStats(heroes, enemies);
                 }
             }
 
+            // 2. Cleanup and printing occur ONCE after ALL enemies have acted
+            cleanupDeadUnits();
+            output.printBoard(board, heroes, enemies);
+            output.displayUnitStats(heroes, enemies);
+
+
             // --- END OF TURN CLEANUP ---
+            // Remove Taunt status before the next turn
             heroes.stream().filter(Hero::isTaunting).forEach(h -> h.setTaunting(false));
 
             if (enemies.stream().noneMatch(Enemy::isAlive)) {
@@ -265,7 +273,8 @@ public class GameController {
         output.displayMessage("\n--- Enemies turn: " + enemy.getName() + " (" + enemy.getClass().getSimpleName() + ") ---");
 
         Hero targetHero = findClosestHero(enemy);
-        if (targetHero == null) {
+        // Ensure the target is alive before proceeding
+        if (targetHero == null || !targetHero.isAlive()) {
             output.displayMessage(enemy.getName() + " has not found a target and ends its turn.");
             return;
         }
@@ -274,40 +283,45 @@ public class GameController {
 
         // --- 1. ABILITY CHECK (OrcShaman Healing Priority) ---
         if (enemy instanceof OrcShaman) {
-            // Shaman priority: Heal if a nearby ally is critically wounded (<= 50% HP)
             Enemy woundedAlly = findWoundedAlly(enemies);
-
-            // Use ability ONLY if a critically wounded ally is found
             if (woundedAlly != null) {
                 enemy.useAbility(heroes, enemies, board);
-
-                // The Shaman's turn continues to move/attack after healing if it can.
-                // No 'return' here because Shamans can heal AND attack/move in the same turn.
+                // Turn continues after healing. NO return here.
             }
         }
 
-        // --- 2. MOVEMENT ---
-        // If enemy cannot attack the primary target, attempt to move.
-        if (!board.isInRange(enemy, targetHero)) {
-            moveToward(enemy, targetHero.getPosition());
-
-            // Output movement message
-            if (!enemy.getPosition().equals(originalPosition)) {
-                output.displayMessage(String.format("%s (%s) moves to %s. Current position: %s",
-                        enemy.getName(), enemy.getClass().getSimpleName(), targetHero.getName(), enemy.getPosition().toString()));
-            }
-        }
-
-        // --- 3. ATTACK ---
+        // --- 2. ATTACK FIRST CHECK (The Bug Fix) ---
+        // If the unit is already in range, attack immediately and end the turn.
         if (board.isInRange(enemy, targetHero)) {
-            output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s.",
+            output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Immediate Attack).",
+                    enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
+                    targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
+            enemy.attack(targetHero);
+
+            // !!! CRITICAL FIX: END THE TURN after attacking when already in range !!!
+            return;
+        }
+
+        // --- 3. MOVEMENT (Only if NOT in range) ---
+        moveToward(enemy, targetHero.getPosition());
+
+        // Output movement message
+        if (!enemy.getPosition().equals(originalPosition)) {
+            output.displayMessage(String.format("%s (%s) moved toward %s. Current position: %s",
+                    enemy.getName(), enemy.getClass().getSimpleName(), targetHero.getName(), enemy.getPosition().toString()));
+        }
+
+        // --- 4. POST-MOVEMENT ATTACK ---
+        // Check range again after movement
+        if (board.isInRange(enemy, targetHero)) {
+            output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Post-Move Attack).",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
                     targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
             enemy.attack(targetHero);
         } else {
-            // Output stuck message ONLY if no movement occurred AND no attack was possible.
+            // Output stuck message
             if (enemy.getPosition().equals(originalPosition)) {
-                output.displayMessage(enemy.getName() + " could not reach the target or was already close, but not within range.");
+                output.displayMessage(enemy.getName() + " couldn't find a free space to move and got stuck.");
             } else {
                 output.displayMessage(enemy.getName() + " moved, but the goal is still out of reach.");
             }
@@ -499,7 +513,6 @@ public class GameController {
         );
     }
 
-    // Keeping moveToward as it is, since its logic is already quite complex and well-contained.
     private void moveToward(Enemy enemy, Position targetPos) {
         Position current = enemy.getPosition();
         Position bestNextPos = current; // Default: stay put
