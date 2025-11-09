@@ -15,7 +15,7 @@ public class DefaultUnitFactory implements UnitFactory {
     public DefaultUnitFactory() {}
 
     @Override
-    public Hero createHero(HeroType type, Position position) { // Changed com.game.units.Hero.com.game.factory.HeroType to com.game.factory.HeroType
+    public Hero createHero(HeroType type, Position position) {
         return switch (type) {
             case HeroType.TANK -> new Tank(position);
             case HeroType.WARRIOR -> new Warrior(position);

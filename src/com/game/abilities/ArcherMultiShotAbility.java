@@ -22,12 +22,10 @@ public class ArcherMultiShotAbility implements HeroAbility {
                 .sorted(Comparator.comparingInt(e -> self.getPosition().distanceTo(e.getPosition())))
                 .limit(MAX_TARGETS)
                 .toList();
-
         if (targets.isEmpty()) {
             System.out.println("No enemies within range for ‘Multi Shot’.");
             return;
         }
-
         int multiShotDamage = self.getDamage() / 2; // Calculate the damage
         for (Enemy e : targets) {
             self.attackWithDamage(e, multiShotDamage); // Use the new method

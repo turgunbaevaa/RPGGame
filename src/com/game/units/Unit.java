@@ -25,27 +25,32 @@ public abstract class Unit {
 
     public abstract void move(Position targetPosition, Board board);
 
+    public abstract void levelUp();
+
+    public abstract int getMaxHealth();
+
+    public abstract String getDisplaySymbol();
+
     // This is the default attack method for normal attacks
     public void attack(Unit target) {
         attackWithDamage(target, this.damage);
     }
 
-    // This is the new method for abilities or special attacks
     public void attackWithDamage(Unit target, int damageAmount) {
         if (this.position.distanceTo(target.getPosition()) <= this.range) {
             int oldTargetHealth = target.getHealth();
             target.takeDamage(damageAmount);
 
-            System.out.printf("%s (%s) на позиции %s атакует %s (%s) на позиции %s, нанося %d урона.%n",
+            System.out.printf("%s (%s) at position %s attacks %s (%s) at position %s, dealing %d damage.%n",
                     this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
                     target.getName(), target.getClass().getSimpleName(), target.getPosition().toString(),
                     damageAmount);
-            System.out.printf("   Здоровье %s: %d/%d (было %d)%n",
+            System.out.printf("  Health %s: %d/%d (was %d)%n",
                     target.getName(), target.getHealth(), target.getMaxHealth(), oldTargetHealth);
 
             boolean targetDied = !target.isAlive();
             if (targetDied) {
-                System.out.printf("   %s (%s) был повержен!%n", target.getName(), target.getClass().getSimpleName());
+                System.out.printf("   %s (%s) was defeated!%n", target.getName(), target.getClass().getSimpleName());
             }
 
         }
@@ -54,8 +59,6 @@ public abstract class Unit {
     public void takeDamage(int amount) {
         this.health = Math.max(0, this.health - amount);
     }
-
-    public abstract void levelUp();
 
     public boolean isAlive() {
         return this.health > 0;
@@ -72,8 +75,6 @@ public abstract class Unit {
     public int getHealth() {
         return health;
     }
-
-    public abstract int getMaxHealth();
 
     public String getName() { return name; }
     public int getDamage() { return damage; }
@@ -97,6 +98,4 @@ public abstract class Unit {
     public int hashCode() {
         return Objects.hash(name, health, damage, range, speed, level, position);
     }
-
-    public abstract String getDisplaySymbol();
 }

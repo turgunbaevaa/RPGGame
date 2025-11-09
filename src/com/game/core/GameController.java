@@ -199,7 +199,11 @@ public class GameController {
         enemies.stream()
                 .filter(Enemy::isAlive)
                 .filter(e -> hero.getPosition().distanceTo(e.getPosition()) <= hero.getRange() + 2)
-                .forEach(e -> output.displayMessage(String.format("  - %s на %s HP: %d/%d", e.getName(), e.getPosition().toString(), e.getHealth(), e.getMaxHealth())));
+                .forEach(e -> output.displayMessage(String.format("  - %s на %s HP: %d/%d",
+                        e.getName(),
+                        e.getPosition().toString(),
+                        e.getHealth(),
+                        e.getMaxHealth())));
 
         try {
             int choice = input.getIntInput(buildHeroMenu(hero));
@@ -290,7 +294,7 @@ public class GameController {
             }
         }
 
-        // --- 2. ATTACK FIRST CHECK (The Bug Fix) ---
+        // --- 2. ATTACK FIRST CHECK ---
         // If the unit is already in range, attack immediately and end the turn.
         if (board.isInRange(enemy, targetHero)) {
             output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Immediate Attack).",
@@ -298,7 +302,6 @@ public class GameController {
                     targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
             enemy.attack(targetHero);
 
-            // !!! CRITICAL FIX: END THE TURN after attacking when already in range !!!
             return;
         }
 
@@ -500,7 +503,6 @@ public class GameController {
         } else {
             output.displayMessage("The game is over. Number of moves: " + turnCount);
         }
-        // ... (rest of the conclusion output)
         output.displayMessage("\n--- Final score ---");
         output.displayMessage("Waves passed: " + (wave - 1));
         output.displayMessage("Remaining gold: " + gold);
@@ -515,9 +517,8 @@ public class GameController {
 
     private void moveToward(Enemy enemy, Position targetPos) {
         Position current = enemy.getPosition();
-        Position bestNextPos = current; // Default: stay put
+        Position bestNextPos = current;
         int minDistance = current.distanceTo(targetPos);
-
         // 1. Generate all possible move positions based on speed
         List<Position> possibleMoves = new ArrayList<>();
         for (int dx = -enemy.getSpeed(); dx <= enemy.getSpeed(); dx++) {
@@ -531,7 +532,6 @@ public class GameController {
                 }
             }
         }
-
         // Sort moves to prioritize those that close the distance the most
         possibleMoves.sort(Comparator.comparingInt(pos -> pos.distanceTo(targetPos)));
 
@@ -545,22 +545,19 @@ public class GameController {
                 }
             }
         }
-
         // 3. Determine Final Position
         if (!bestCloserSpot.equals(current)) {
             // If we found a spot that is strictly closer, use it.
             bestNextPos = bestCloserSpot;
         } else {
             // If no strictly closer spot was found (e.g., blocked or already adjacent)
-            // search for ANY valid, empty, reachable spot as a backup move
             for (Position move : possibleMoves) {
                 if (board.isEmpty(move)) {
                     bestNextPos = move;
-                    break; // Use the first available spot found (which is the one that minimizes distance best after sorting)
+                    break;
                 }
             }
         }
-
         // 4. Execute Movement
         if (!bestNextPos.equals(current)) {
             board.updatePosition(enemy, bestNextPos);

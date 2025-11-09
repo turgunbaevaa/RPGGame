@@ -54,7 +54,6 @@ public class WarriorKnockbackAbility implements HeroAbility {
 
             if (!finalPushPos.equals(currentPos)) {
                 board.updatePosition(closest, finalPushPos);
-                // 🛠️ OPTIMIZATION: Removed redundant .toString() call
                 System.out.println(closest.getName() + " discarded on " + finalPushPos + "!");
             } else {
                 System.out.println(closest.getName() + " couldn't discard.");
