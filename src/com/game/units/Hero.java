@@ -11,7 +11,7 @@ public abstract class Hero extends Unit {
     protected int baseSpeed;
     protected int baseRange;
 
-    protected HeroAbility ability;
+    private final HeroAbility ability;
 
     protected Hero(String name, int health, int damage, int range, int speed, Position position, int level, HeroAbility ability) {
         super(name, health, damage, range, speed, position, level);
@@ -25,17 +25,17 @@ public abstract class Hero extends Unit {
     @Override
     public void move(Position targetPosition, Board board) {
         board.updatePosition(this, targetPosition);
-        System.out.println(this.name + " moved to " + targetPosition.toString());
+        System.out.println(this.getName() + " moved to " + targetPosition.toString());
     }
 
     @Override
     public void levelUp() {
-        this.level++;
+        this.setLevel(this.getLevel() + 1);
         this.baseHealth += 30;
         this.baseDamage += 10;
         this.baseSpeed += 1;
-        this.health = this.getMaxHealth();
-        System.out.println(this.name + " increased the level to " + level + "!");
+        this.setHealth(this.getMaxHealth());
+        System.out.println(this.getName() + " increased the level to " + getLevel() + "!");
     }
 
     @Override
@@ -58,30 +58,30 @@ public abstract class Hero extends Unit {
     public void setTaunting(boolean taunting) {
         this.isTaunting = taunting;
         if (taunting) {
-            System.out.println(this.name + " is now provoking!");
+            System.out.println(this.getName() + " is now provoking!");
         } else {
-            System.out.println(this.name + " no longer provokes.");
+            System.out.println(this.getName() + " no longer provokes.");
         }
     }
 
     public void upgradeHealthStat(int amount) {
         this.baseHealth += amount;
-        this.health = this.getMaxHealth();
+        this.setHealth(this.getMaxHealth());
     }
 
     public void upgradeDamageStat(int amount) {
         this.baseDamage += amount;
-        this.damage += amount;
+        this.setDamage(this.getDamage() + amount);
     }
 
     public void upgradeSpeedStat(int amount) {
         this.baseSpeed += amount;
-        this.speed += amount;
+        this.setSpeed(this.getSpeed() + amount);
     }
 
     public void upgradeRangeStat(int amount) {
         this.baseRange += amount;
-        this.range += amount;
+        this.setRange(this.getRange() + amount);
     }
 
     @Override

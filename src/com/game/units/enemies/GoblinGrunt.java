@@ -14,10 +14,10 @@ public class GoblinGrunt extends Enemy {
         this.baseSpeed = 2;
         this.baseRange = 1;
 
-        this.health = baseHealth + (wave - 1) * 10;
-        this.damage = baseDamage + (wave - 1) * 2;
-        this.speed = baseSpeed + (wave - 1) / 4;
-        this.range = baseRange;
+        this.setHealth(this.baseHealth + (wave - 1) * 10);
+        this.setDamage(this.baseDamage + (wave - 1) * 2);
+        this.setSpeed(this.baseSpeed + (wave - 1) / 4);
+        this.setRange(this.baseRange);
     }
 
     @Override

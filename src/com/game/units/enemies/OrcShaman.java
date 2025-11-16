@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 public class OrcShaman extends Enemy {
-    private int healAmount = 25;
+    private int healAmount;
     private final int healRange = 2;
 
     public OrcShaman(Position position) {
@@ -23,10 +23,10 @@ public class OrcShaman extends Enemy {
         this.baseSpeed = 2;
         this.baseRange = 1;
 
-        this.health = baseHealth + (wave - 1) * 15;
-        this.damage = baseDamage + (wave - 1);
-        this.speed = baseSpeed;
-        this.range = baseRange;
+        this.setHealth(this.baseHealth + (wave - 1) * 15);
+        this.setDamage(this.baseDamage + (wave - 1));
+        this.setSpeed(this.baseSpeed);
+        this.setRange(this.baseRange);
         this.healAmount = 15 + (wave - 1) * 3;
     }
 
@@ -36,9 +36,9 @@ public class OrcShaman extends Enemy {
         Optional<Enemy> targetToHeal = allEnemies.stream()
                 .filter(e -> e != this && e.isAlive() && e.getHealth() < e.getMaxHealth())
                 // Optimally filter by range first
-                .filter(e -> this.position.distanceTo(e.getPosition()) <= this.healRange)
-                // Target the unit with the largest health deficit
-                .min(Comparator.comparingInt(e -> (e.getMaxHealth() - e.getHealth())));
+                .filter(e -> this.getPosition().distanceTo(e.getPosition()) <= this.healRange)
+                // Target the unit with the largest health deficit (most damage)
+                .max(Comparator.comparingInt(e -> (e.getMaxHealth() - e.getHealth())));
 
         if (targetToHeal.isPresent()) {
             targetToHeal.get().increaseHealth(this.healAmount);
@@ -53,6 +53,6 @@ public class OrcShaman extends Enemy {
 
     @Override
     public String getDisplaySymbol() {
-        return "O"; // Orc Shaman symbol
+        return "O";
     }
 }

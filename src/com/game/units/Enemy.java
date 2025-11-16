@@ -10,6 +10,7 @@ public abstract class Enemy extends Unit {
     protected int baseDamage;
     protected int baseSpeed;
     protected int baseRange;
+    protected int currentWave;
 
     public Enemy(String name, int health, int damage, int range, int speed, Position position, int goldValue) {
         super(name, health, damage, range, speed, position, 1);
@@ -18,6 +19,7 @@ public abstract class Enemy extends Unit {
         this.baseDamage = damage;
         this.baseSpeed = speed;
         this.baseRange = range;
+        this.currentWave = 1;
     }
 
     @Override
@@ -31,16 +33,20 @@ public abstract class Enemy extends Unit {
     }
 
     public void levelUpStats(int wave) {
-        this.baseHealth = baseHealth + (wave - 1) * 10;
-        this.health = this.baseHealth; // Set current health to new max health
-        this.damage = baseDamage + (wave - 1) * 2;
-        this.speed = baseSpeed + (wave - 1) / 4;
-        this.range = baseRange;
+        this.currentWave = wave;
+        int newMaxHealth = this.baseHealth + (wave - 1) * 10;
+        int newDamage = this.baseDamage + (wave - 1) * 2;
+        int newSpeed = this.baseSpeed + (wave - 1) / 4;
+
+        this.setHealth(newMaxHealth);
+        this.setDamage(newDamage);
+        this.setSpeed(newSpeed);
+        this.setRange(this.baseRange);
     }
 
     @Override
     public int getMaxHealth() {
-        return baseHealth;
+        return this.baseHealth + (this.currentWave - 1) * 10;
     }
 
     public int getGoldValue() {

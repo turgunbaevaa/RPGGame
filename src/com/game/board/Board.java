@@ -63,7 +63,6 @@ public class Board {
         }
 
         Position oldPos = unit.getPosition();
-
         // 1. Check if the new position is occupied by another unit (excluding the unit itself)
         Unit unitAtNewPos = grid[newPos.y()][newPos.x()];
         if (unitAtNewPos != null && unitAtNewPos != unit) {
@@ -71,12 +70,10 @@ public class Board {
                     newPos, unitAtNewPos.getName());
             return;
         }
-
         // 2. Remove unit from old position (safely using null/validity checks)
         if (oldPos != null && isValidPosition(oldPos) && grid[oldPos.y()][oldPos.x()] == unit) {
             grid[oldPos.y()][oldPos.x()] = null;
         }
-
         // 3. Place unit in new position
         grid[newPos.y()][newPos.x()] = unit;
         unit.setPosition(newPos);

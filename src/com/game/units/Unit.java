@@ -5,13 +5,13 @@ import com.game.board.Position;
 import java.util.Objects;
 
 public abstract class Unit {
-    protected String name;
-    protected int health;
-    protected int damage;
-    protected int range;
-    protected int speed;
-    protected int level;
-    protected Position position;
+    private String name;
+    private int health;
+    private int damage;
+    private int range;
+    private int speed;
+    private int level;
+    private Position position;
 
     public Unit(String name, int health, int damage, int range, int speed, Position position, int level) {
         this.name = name;
@@ -60,27 +60,22 @@ public abstract class Unit {
         this.health = Math.max(0, this.health - amount);
     }
 
-    public boolean isAlive() {
-        return this.health > 0;
-    }
+    public boolean isAlive() { return this.health > 0; }
 
-    public Position getPosition() {
-        return this.position;
-    }
-
-    public void setPosition(Position pos) {
-        this.position = pos;
-    }
-
-    public int getHealth() {
-        return health;
-    }
-
+    public Position getPosition() { return this.position;}
+    public int getHealth() { return health; }
     public String getName() { return name; }
     public int getDamage() { return damage; }
     public int getRange() { return range; }
     public int getSpeed() { return speed; }
     public int getLevel() { return level; }
+
+    public void setPosition(Position pos) { this.position = pos; }
+    protected void setLevel(int level) { this.level = level; }
+    protected void setHealth(int health) { this.health = health; }
+    protected void setDamage(int damage) { this.damage = damage; }
+    protected void setSpeed(int speed) { this.speed = speed; }
+    protected void setRange(int range) { this.range = range; }
 
     public void increaseHealth(int amount) {
         this.health = Math.min(this.health + amount, getMaxHealth());
