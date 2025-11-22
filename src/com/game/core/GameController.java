@@ -69,14 +69,14 @@ public class GameController {
         heroes.forEach(board::removeUnit);
         heroes.clear();
 
-        // Placing units in a loop is cleaner and handles null positions more gracefully
         HeroType[] types = HeroType.values();
         for (HeroType type : types) {
             Position pos = getRandomEmptyPosition(0, 4, 0, 4);
             if (pos != null) {
                 Hero hero = unitFactory.createHero(type, pos);
+                Unit unitReference = hero;
                 heroes.add(hero);
-                board.placeUnit(hero);
+                board.placeUnit(unitReference);
             } else {
                 output.displayError("Unable to place hero " + type + " due to lack of available slots.");
             }

@@ -18,15 +18,15 @@ public class OrcShaman extends Enemy {
 
     @Override
     public void levelUpStats(int wave) {
-        this.baseHealth = 100;
-        this.baseDamage = 5;
-        this.baseSpeed = 2;
-        this.baseRange = 1;
+        this.setBaseHealth(100);
+        this.setBaseDamage(5);
+        this.setBaseSpeed(2);
+        this.setBaseRange(1);
 
-        this.setHealth(this.baseHealth + (wave - 1) * 15);
-        this.setDamage(this.baseDamage + (wave - 1));
-        this.setSpeed(this.baseSpeed);
-        this.setRange(this.baseRange);
+        this.setHealth(this.getBaseHealth() + (wave - 1) * 15);
+        this.setDamage(this.getBaseDamage() + (wave - 1));
+        this.setSpeed(this.getBaseSpeed());
+        this.setRange(this.getBaseRange());
         this.healAmount = 15 + (wave - 1) * 3;
     }
 

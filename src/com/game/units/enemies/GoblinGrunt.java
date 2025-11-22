@@ -9,15 +9,15 @@ public class GoblinGrunt extends Enemy {
 
     @Override
     public void levelUpStats(int wave) {
-        this.baseHealth = 70;
-        this.baseDamage = 15;
-        this.baseSpeed = 2;
-        this.baseRange = 1;
+        this.setBaseHealth(70);
+        this.setBaseDamage(15);
+        this.setBaseSpeed(2);
+        this.setBaseRange(1);
 
-        this.setHealth(this.baseHealth + (wave - 1) * 10);
-        this.setDamage(this.baseDamage + (wave - 1) * 2);
-        this.setSpeed(this.baseSpeed + (wave - 1) / 4);
-        this.setRange(this.baseRange);
+        this.setHealth(this.getBaseHealth() + (wave - 1) * 10);
+        this.setDamage(this.getBaseDamage() + (wave - 1) * 2);
+        this.setSpeed(this.getBaseSpeed() + (wave - 1) / 4);
+        this.setRange(this.getBaseRange());
     }
 
     @Override

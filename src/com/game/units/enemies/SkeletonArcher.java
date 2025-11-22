@@ -9,15 +9,15 @@ public class SkeletonArcher extends Enemy {
 
     @Override
     public void levelUpStats(int wave) {
-        this.baseHealth = 50;
-        this.baseDamage = 10;
-        this.baseSpeed = 1;
-        this.baseRange = 4;
+        this.setBaseHealth(50);
+        this.setBaseDamage(10);
+        this.setBaseSpeed(1);
+        this.setBaseRange(4);
 
-        this.setHealth(this.baseHealth + (wave - 1) * 8);
-        this.setDamage(this.baseDamage + (wave - 1) * 3);
-        this.setSpeed(this.baseSpeed + (wave - 1) / 5);
-        this.setRange(this.baseRange);
+        this.setHealth(this.getBaseHealth() + (wave - 1) * 8);
+        this.setDamage(this.getBaseDamage() + (wave - 1) * 3);
+        this.setSpeed(this.getBaseSpeed() + (wave - 1) / 5);
+        this.setRange(this.getBaseRange());
     }
 
     @Override

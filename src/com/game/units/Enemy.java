@@ -5,12 +5,12 @@ import com.game.board.Position;
 import java.util.*;
 
 public abstract class Enemy extends Unit {
-    protected int goldValue;
-    protected int baseHealth;
-    protected int baseDamage;
-    protected int baseSpeed;
-    protected int baseRange;
-    protected int currentWave;
+    private int goldValue;
+    private int baseHealth;
+    private int baseDamage;
+    private int baseSpeed;
+    private int baseRange;
+    private int currentWave;
 
     public Enemy(String name, int health, int damage, int range, int speed, Position position, int goldValue) {
         super(name, health, damage, range, speed, position, 1);
@@ -21,6 +21,18 @@ public abstract class Enemy extends Unit {
         this.baseRange = range;
         this.currentWave = 1;
     }
+
+    public int getBaseHealth(){ return baseHealth; }
+    protected void setBaseHealth(int baseHealth){ this.baseHealth = baseHealth; }
+
+    public int getBaseDamage(){ return baseDamage; }
+    protected void setBaseDamage(int baseDamage){ this.baseDamage = baseDamage; }
+
+    public int getBaseSpeed(){ return baseSpeed; }
+    protected void setBaseSpeed(int baseSpeed){ this.baseSpeed = baseSpeed; }
+
+    public int getBaseRange(){ return baseRange; }
+    protected void setBaseRange(int baseRange){ this.baseRange = baseRange; }
 
     @Override
     public void move(Position targetPosition, Board board) {

@@ -5,11 +5,11 @@ import com.game.board.Position;
 import java.util.List;
 
 public abstract class Hero extends Unit {
-    protected boolean isTaunting = false;
-    protected int baseHealth;
-    protected int baseDamage;
-    protected int baseSpeed;
-    protected int baseRange;
+    private boolean isTaunting = false;
+    private int baseHealth;
+    private int baseDamage;
+    private int baseSpeed;
+    private int baseRange;
 
     private final HeroAbility ability;
 
