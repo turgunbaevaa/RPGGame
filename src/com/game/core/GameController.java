@@ -107,18 +107,25 @@ public class GameController {
                     enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(), enemy.getGoldValue()));
         }
 
-        output.displayMessage("⚔️ Wave has " + wave + " started! Enemies: " + enemies.size());
+        output.displayMessage("⚔️ Wave " + wave + " has started! Enemies: " + enemies.size());
     }
 
     private EnemyType selectRandomEnemyType() {
-        double rand = random.nextDouble();
-        if (rand < 0.4) {
-            return EnemyType.GOBLIN_GRUNT;
-        } else if (rand < 0.75) {
-            return EnemyType.SKELETON_ARCHER;
-        } else {
-            return EnemyType.ORC_SHAMAN;
+        int totalWeight = 0;
+        for (EnemyType type : EnemyType.values()) {
+            totalWeight += type.getWeight();
         }
+
+        int randomValue = random.nextInt(totalWeight);
+
+        int currentSum = 0;
+        for (EnemyType type : EnemyType.values()) {
+            currentSum += type.getWeight();
+            if (randomValue < currentSum) {
+                return type;
+            }
+        }
+        return EnemyType.GOBLIN_GRUNT;
     }
 
     // --- GAME LOOP ---
@@ -163,7 +170,6 @@ public class GameController {
 
 
             // --- END OF TURN CLEANUP ---
-            // Remove Taunt status before the next turn
             heroes.stream().filter(Hero::isTaunting).forEach(h -> h.setTaunting(false));
 
             if (enemies.stream().noneMatch(Enemy::isAlive)) {
@@ -262,8 +268,6 @@ public class GameController {
             if (board.isInRange(hero, target)) {
                 hero.attack(target);
             } else {
-                // This check is redundant if chooseTarget only shows in-range targets,
-                // but kept for robustness if input allows out-of-range selection.
                 throw new GameException("The goal is out of reach.");
             }
         } else {
@@ -305,7 +309,7 @@ public class GameController {
             return;
         }
 
-        // --- 3. MOVEMENT (Only if NOT in range) ---
+        // --- 3. MOVEMENT  ---
         moveToward(enemy, targetHero.getPosition());
 
         // Output movement message
@@ -322,7 +326,6 @@ public class GameController {
                     targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
             enemy.attack(targetHero);
         } else {
-            // Output stuck message
             if (enemy.getPosition().equals(originalPosition)) {
                 output.displayMessage(enemy.getName() + " couldn't find a free space to move and got stuck.");
             } else {
@@ -332,7 +335,6 @@ public class GameController {
     }
 
     private Hero findClosestHero(Enemy enemy) {
-        // Find taunting hero first
         Optional<Hero> tauntingHero = heroes.stream()
                 .filter(Hero::isAlive)
                 .filter(Hero::isTaunting)
@@ -353,7 +355,7 @@ public class GameController {
                 .filter(e -> board.isInRange(hero, e))
                 .collect(Collectors.toList());
 
-        output.displayAvailableTargets(inRangeEnemies, hero); // This method must be in com.game.io.GameOutput
+        output.displayAvailableTargets(inRangeEnemies, hero);
 
         if (inRangeEnemies.isEmpty()) {
             return null;
@@ -415,7 +417,7 @@ public class GameController {
                 .orElse(null);
     }
 
-    // --- SHOP (Refactored) ---
+    // --- SHOP ---
 
     private void showShop() {
         output.displayShop(gold, heroes);

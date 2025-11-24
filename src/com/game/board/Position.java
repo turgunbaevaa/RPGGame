@@ -1,8 +1,8 @@
 package com.game.board;
 
 /**
- * @param x Сделаем final, чтобы объект был неизменяемым
- * @param y Сделаем final, чтобы объект был неизменяемым
+ * @param x is final, and not changeable
+ * @param y is final, and not changeable
  */
 public record Position(int x, int y) {
 
