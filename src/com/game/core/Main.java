@@ -18,7 +18,7 @@ public class Main {
 
         GameInput consoleInput = new ConsoleInput(gameScanner);
         GameOutput consoleOutput = new ConsoleOutput();
-        UnitFactory unitFactory = new DefaultUnitFactory();
+        UnitFactory unitFactory = new  DefaultUnitFactory();
 
         GameController game = new GameController(gameBoard, gameRandom, consoleInput, consoleOutput, unitFactory);
         game.startGame();

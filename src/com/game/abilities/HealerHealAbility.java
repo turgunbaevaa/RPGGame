@@ -16,13 +16,13 @@ public class HealerHealAbility implements HeroAbility {
 
         Hero target = allHeroes.stream()
                 .filter(h -> h.isAlive() && h.getHealth() < h.getMaxHealth())
-                // **NEW: Filter by range first**
+                // Filter by range first**
                 .filter(h -> self.getPosition().distanceTo(h.getPosition()) <= self.getRange())
                 .min(Comparator.comparingDouble(h -> (double)h.getHealth() / h.getMaxHealth()))
                 .orElse(null);
 
         if (target == null) {
-            // This covers both "No wounded allies" and "No reachable wounded allies."
+            // Covers both "No wounded allies" and "No reachable wounded allies."
             System.out.println("There are no wounded allies within range.");
         } else {
             target.increaseHealth(HEAL_AMOUNT);

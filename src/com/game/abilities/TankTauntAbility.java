@@ -15,8 +15,6 @@ public class TankTauntAbility implements HeroAbility {
             System.out.println("Hero is not tauntalbe");
             return;
         }
-
-        // Assuming com.game.units.Hero has isTaunting and setTaunting methods accessible or passed as 'self'
         if (tauntable.isTaunting()) {
             System.out.println("The tank is already taunting. Ability is unavailable.");
             return;

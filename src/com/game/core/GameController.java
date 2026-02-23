@@ -199,7 +199,7 @@ public class GameController {
         }
     }
 
-    // --- PLAYER ACTIONS (Refactored) ---
+    // --- PLAYER ACTIONS ---
 
     private void playerTurnIndividual(Hero hero) {
         output.displayMessage("\n--- Hero's turn: " + hero.getName() + " (HP: " + hero.getHealth() + "/" + hero.getMaxHealth() + ") ---");

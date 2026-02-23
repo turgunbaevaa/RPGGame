@@ -7,6 +7,5 @@ import com.game.units.Hero;
 import java.util.List;
 
 public interface AbilityUser {
-
     void useAbility(List<Hero> allHeroes, List<Enemy> allEnemies, Board board);
 }

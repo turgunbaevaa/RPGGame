@@ -18,7 +18,7 @@ public class ArcherMultiShotAbility implements HeroAbility {
         List<Enemy> targets = allEnemies.stream()
                 .filter(Enemy::isAlive)
                 .filter(e -> self.getPosition().distanceTo(e.getPosition()) <= self.getRange())
-                // **NEW: Order by distance and limit the count**
+                // Order by distance and limit the count**
                 .sorted(Comparator.comparingInt(e -> self.getPosition().distanceTo(e.getPosition())))
                 .limit(MAX_TARGETS)
                 .toList();
