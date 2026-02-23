@@ -2,6 +2,7 @@ package com.game.io;
 import com.game.board.Board;
 import com.game.units.Enemy;
 import com.game.units.Hero;
+import com.game.units.Tauntable;
 import com.game.units.Unit;
 
 import java.util.List;
@@ -20,7 +21,32 @@ public class ConsoleOutput implements GameOutput {
 
     @Override
     public void printBoard(Board board, List<Hero> heroes, List<Enemy> enemies) {
-        board.printBoard();
+        final int size = 10;
+        String[][] cells = new String[size][size];
+
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                cells[y][x] = ".";
+            }
+        }
+
+        heroes.stream()
+                .filter(Hero::isAlive)
+                .forEach(hero -> cells[hero.getPosition().y()][hero.getPosition().x()] = hero.getDisplaySymbol());
+        enemies.stream()
+                .filter(Enemy::isAlive)
+                .forEach(enemy -> cells[enemy.getPosition().y()][enemy.getPosition().x()] = enemy.getDisplaySymbol());
+
+        System.out.println("   0 1 2 3 4 5 6 7 8 9");
+        System.out.println("  ---------------------");
+        for (int y = 0; y < size; y++) {
+            System.out.print(y + " |");
+            for (int x = 0; x < size; x++) {
+                System.out.print(cells[y][x] + " ");
+            }
+            System.out.println("|");
+        }
+        System.out.println("  ---------------------");
     }
 
     @Override
@@ -28,7 +54,7 @@ public class ConsoleOutput implements GameOutput {
         System.out.println("\n--- The State of Heroes ---");
         heroes.stream().filter(Unit::isAlive).forEach(hero -> {
             // Prepare the taunt status string with a leading space if it exists
-            String tauntStatus = hero.isTaunting() ? " (Provocation)" : "";
+            String tauntStatus = (hero instanceof Tauntable tauntable && tauntable.isTaunting()) ? " (Provocation)" : "";
 
             System.out.printf("  %s%s (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
                     hero.getName(),

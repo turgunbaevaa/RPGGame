@@ -1,11 +1,12 @@
 package com.game.units;
+
 import com.game.board.Board;
 import com.game.board.Position;
 
 import java.util.*;
 
 public abstract class Enemy extends Unit {
-    private int goldValue;
+    private final int goldValue;
     private int baseHealth;
     private int baseDamage;
     private int baseSpeed;
@@ -22,25 +23,25 @@ public abstract class Enemy extends Unit {
         this.currentWave = 1;
     }
 
-    public int getBaseHealth(){ return baseHealth; }
-    protected void setBaseHealth(int baseHealth){ this.baseHealth = baseHealth; }
+    public final int getBaseHealth(){ return baseHealth; }
+    protected final void setBaseHealth(int baseHealth){ this.baseHealth = baseHealth; }
 
-    public int getBaseDamage(){ return baseDamage; }
-    protected void setBaseDamage(int baseDamage){ this.baseDamage = baseDamage; }
+    public final int getBaseDamage(){ return baseDamage; }
+    protected final void setBaseDamage(int baseDamage){ this.baseDamage = baseDamage; }
 
-    public int getBaseSpeed(){ return baseSpeed; }
-    protected void setBaseSpeed(int baseSpeed){ this.baseSpeed = baseSpeed; }
+    public final int getBaseSpeed(){ return baseSpeed; }
+    protected final void setBaseSpeed(int baseSpeed){ this.baseSpeed = baseSpeed; }
 
-    public int getBaseRange(){ return baseRange; }
-    protected void setBaseRange(int baseRange){ this.baseRange = baseRange; }
+    public final int getBaseRange(){ return baseRange; }
+    protected final void setBaseRange(int baseRange){ this.baseRange = baseRange; }
 
     @Override
-    public void move(Position targetPosition, Board board) {
+    public final void move(Position targetPosition, Board board) {
         board.updatePosition(this, targetPosition);
     }
 
     @Override
-    public void levelUp() {
+    public final void levelUp() {
         // Enemies don't level up traditionally
     }
 
@@ -57,15 +58,15 @@ public abstract class Enemy extends Unit {
     }
 
     @Override
-    public int getMaxHealth() {
+    public final int getMaxHealth() {
         return this.baseHealth + (this.currentWave - 1) * 10;
     }
 
-    public int getGoldValue() {
+    public final int getGoldValue() {
         return goldValue;
     }
 
     public void useAbility(List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {
-
+        // no-op
     }
 }

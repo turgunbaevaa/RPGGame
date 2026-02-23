@@ -28,7 +28,7 @@ public class ArcherMultiShotAbility implements HeroAbility {
         }
         int multiShotDamage = self.getDamage() / 2; // Calculate the damage
         for (Enemy e : targets) {
-            self.attackWithDamage(e, multiShotDamage); // Use the new method
+            self.attack(e, multiShotDamage); // Use the new method
         }
         System.out.println("Multiple shots are completed.");
     }

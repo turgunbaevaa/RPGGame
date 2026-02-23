@@ -1,9 +1,12 @@
 package com.game.core;
 import com.game.board.Board;
+import com.game.board.Locatable;
 import com.game.board.Position;
 
+import com.game.abilities.AbilityUser;
 import com.game.units.Hero;
 import com.game.units.Enemy;
+import com.game.units.Tauntable;
 
 import com.game.factory.UnitFactory;
 import com.game.factory.HeroType;
@@ -12,7 +15,6 @@ import com.game.factory.EnemyType;
 import com.game.io.GameInput;
 import com.game.io.GameOutput;
 import com.game.exceptions.GameException;
-import com.game.units.Unit;
 import com.game.units.heroes.Healer;
 import com.game.units.enemies.OrcShaman;
 
@@ -74,9 +76,8 @@ public class GameController {
             Position pos = getRandomEmptyPosition(0, 4, 0, 4);
             if (pos != null) {
                 Hero hero = unitFactory.createHero(type, pos);
-                Unit unitReference = hero;
                 heroes.add(hero);
-                board.placeUnit(unitReference);
+                board.place(hero);
             } else {
                 output.displayError("Unable to place hero " + type + " due to lack of available slots.");
             }
@@ -101,7 +102,7 @@ public class GameController {
             Enemy enemy = unitFactory.createEnemy(type, spawnPos, wave);
 
             enemies.add(enemy);
-            board.placeUnit(enemy);
+            board.place(enemy);
             output.displayMessage(String.format("Enemy %s (%s) created on %s. HP: %d/%d, Damage: %d, Gold: %d",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
                     enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(), enemy.getGoldValue()));
@@ -170,7 +171,9 @@ public class GameController {
 
 
             // --- END OF TURN CLEANUP ---
-            heroes.stream().filter(Hero::isTaunting).forEach(h -> h.setTaunting(false));
+            heroes.stream()
+                    .filter(hero -> hero instanceof Tauntable tauntable && tauntable.isTaunting())
+                    .forEach(hero -> ((Tauntable) hero).setTaunting(false));
 
             if (enemies.stream().noneMatch(Enemy::isAlive)) {
                 handleWaveCompletion();
@@ -213,11 +216,14 @@ public class GameController {
 
         try {
             int choice = input.getIntInput(buildHeroMenu(hero));
-            switch (choice) {
-                case 1 -> handleHeroMovement(hero);
-                case 2 -> handleHeroAttack(hero);
-                case 3 -> hero.useAbility(heroes, enemies, board);
-                default -> throw new GameException("Wrong choice. Turn skipped.");
+            if (choice == 1) {
+                handleHeroMovement(hero);
+            } else if (choice == 2) {
+                handleHeroAttack(hero);
+            } else if (choice == 3 && hero instanceof AbilityUser abilityUser){
+                handleHeroAbility(abilityUser);
+            } else {
+                throw new GameException("Wrong choice. Turn skipped.");
             }
         } catch (GameException e) {
             output.displayError(e.getMessage());
@@ -232,7 +238,9 @@ public class GameController {
         if (!(hero instanceof Healer)) {
             menu.append("2. Attack\n");
         }
-        menu.append("3. Ability\n");
+        if (hero instanceof AbilityUser) {
+            menu.append("3. Ability\n");
+        }
         menu.append("Your choice is : ");
         return menu.toString();
     }
@@ -244,7 +252,7 @@ public class GameController {
             throw new GameException("Position outside the map boundaries.");
         }
 
-        Unit unitAtNewPos = board.getUnitAt(newPos);
+        Locatable unitAtNewPos = board.getLocatableAt(newPos);
         if (unitAtNewPos != null && unitAtNewPos != hero) {
             throw new GameException("The position is occupied by another unit.");
         }
@@ -265,7 +273,7 @@ public class GameController {
         Enemy target = chooseTarget(hero);
 
         if (target != null) {
-            if (board.isInRange(hero, target)) {
+            if (hero.isInRange(target)) {
                 hero.attack(target);
             } else {
                 throw new GameException("The goal is out of reach.");
@@ -273,6 +281,10 @@ public class GameController {
         } else {
             output.displayMessage("The attack is canceled or there are no available targets.");
         }
+    }
+
+    private void handleHeroAbility(AbilityUser user) {
+        user.useAbility(heroes, enemies, board);
     }
 
     // --- ENEMY AI ---
@@ -300,7 +312,7 @@ public class GameController {
 
         // --- 2. ATTACK FIRST CHECK ---
         // If the unit is already in range, attack immediately and end the turn.
-        if (board.isInRange(enemy, targetHero)) {
+        if (enemy.isInRange(targetHero)) {
             output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Immediate Attack).",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
                     targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
@@ -320,7 +332,7 @@ public class GameController {
 
         // --- 4. POST-MOVEMENT ATTACK ---
         // Check range again after movement
-        if (board.isInRange(enemy, targetHero)) {
+        if (enemy.isInRange(targetHero)) {
             output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Post-Move Attack).",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
                     targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
@@ -337,7 +349,7 @@ public class GameController {
     private Hero findClosestHero(Enemy enemy) {
         Optional<Hero> tauntingHero = heroes.stream()
                 .filter(Hero::isAlive)
-                .filter(Hero::isTaunting)
+                .filter(hero -> hero instanceof Tauntable tauntable && tauntable.isTaunting())
                 .findFirst();
 
         // If a taunting hero exists, return them (Taunt overrides proximity)
@@ -352,7 +364,7 @@ public class GameController {
     private Enemy chooseTarget(Hero hero) {
         List<Enemy> inRangeEnemies = enemies.stream()
                 .filter(Enemy::isAlive)
-                .filter(e -> board.isInRange(hero, e))
+                .filter(hero::isInRange)
                 .collect(Collectors.toList());
 
         output.displayAvailableTargets(inRangeEnemies, hero);

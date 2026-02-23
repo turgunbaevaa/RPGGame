@@ -18,12 +18,12 @@ public class WarriorKnockbackAbility implements HeroAbility {
                 .min(Comparator.comparingInt(e -> e.getPosition().distanceTo(self.getPosition())))
                 .orElse(null);
 
-        if (closest != null && board.isInRange(self, closest)) {
+        if (closest != null && self.isInRange(closest)) {
             // Calculate the special damage for the ability
             int abilityDamage = (int)(self.getDamage() * 1.5);
 
             // Use the new attack method that accepts a custom damage value
-            self.attackWithDamage(closest, abilityDamage);
+            self.attack(closest, abilityDamage);
 
             Position currentPos = closest.getPosition();
             Position heroPos = self.getPosition();
