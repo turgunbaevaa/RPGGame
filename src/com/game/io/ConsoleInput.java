@@ -37,7 +37,7 @@ public class ConsoleInput implements GameInput {
     public Position getPositionInput(String prompt) throws GameException {
         System.out.print(prompt);
         String coordsInput = scanner.nextLine().trim();
-        String[] parts = coordsInput.split(" ");
+        String[] parts = coordsInput.split("\\s+");
 
         if (parts.length < 2) {
             throw new GameException("Incorrect coordinate format. Enter two numbers separated by a space (X Y).");

@@ -17,10 +17,10 @@ public class DefaultUnitFactory implements UnitFactory {
     @Override
     public Hero createHero(HeroType type, Position position) {
         return switch (type) {
-            case HeroType.TANK -> new Tank(position);
-            case HeroType.WARRIOR -> new Warrior(position);
-            case HeroType.ARCHER -> new Archer(position);
-            case HeroType.HEALER -> new Healer(position);
+            case TANK -> new Tank(position);
+            case WARRIOR -> new Warrior(position);
+            case ARCHER -> new Archer(position);
+            case HEALER -> new Healer(position);
             default -> throw new IllegalArgumentException("Unknown hero type: " + type);
         };
     }
@@ -28,9 +28,9 @@ public class DefaultUnitFactory implements UnitFactory {
     @Override
     public Enemy createEnemy(EnemyType type, Position position, int wave) {
         Enemy enemy = switch (type) {
-            case EnemyType.GOBLIN_GRUNT -> new GoblinGrunt(position);
-            case EnemyType.ORC_SHAMAN -> new OrcShaman(position);
-            case EnemyType.SKELETON_ARCHER -> new SkeletonArcher(position);
+            case GOBLIN_GRUNT -> new GoblinGrunt(position);
+            case ORC_SHAMAN -> new OrcShaman(position);
+            case SKELETON_ARCHER -> new SkeletonArcher(position);
             default -> throw new IllegalArgumentException("Unknown enemy type: " + type);
         };
 

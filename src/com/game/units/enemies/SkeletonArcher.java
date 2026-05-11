@@ -9,6 +9,7 @@ public class SkeletonArcher extends Enemy {
 
     @Override
     public void levelUpStats(int wave) {
+        super.levelUpStats(wave);
         this.setBaseHealth(50);
         this.setBaseDamage(10);
         this.setBaseSpeed(1);

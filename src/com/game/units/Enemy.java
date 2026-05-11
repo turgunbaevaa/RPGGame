@@ -3,7 +3,7 @@ package com.game.units;
 import com.game.board.Board;
 import com.game.board.Position;
 
-import java.util.*;
+import java.util.List;
 
 public abstract class Enemy extends Unit {
     private final int goldValue;

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Comparator;
 
 public class HealerHealAbility implements HeroAbility {
-    private final int HEAL_AMOUNT = 50; // Could be a constant or passed in constructor
+    private static final int HEAL_AMOUNT = 50;
 
     @Override
     public void use(Hero self, List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {

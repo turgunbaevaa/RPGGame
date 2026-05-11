@@ -6,6 +6,9 @@ import com.game.units.Unit;
 
 import java.util.List;
 
+/**
+ * Defines methods for displaying game information to the player.
+ */
 public interface GameOutput {
     void displayMessage(String message);
     void printBoard(Board board, List<Hero> heroes, List<Enemy> enemies); // Needs actual lists for detailed stats

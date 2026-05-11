@@ -18,16 +18,22 @@ import com.game.exceptions.GameException;
 import com.game.units.heroes.Healer;
 import com.game.units.enemies.OrcShaman;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class GameController {
+    private static final int MAX_TURNS = 10;
+    private static final int MAX_WAVES = 5;
+
     private final Board board;
     private final List<Hero> heroes;
     private final List<Enemy> enemies;
     private int turnCount = 0;
-    private final int MAX_TURNS = 10;
-    private final int MAX_WAVES = 5;
     private int wave = 1;
     private int gold = 0;
     private final Random random;
@@ -208,7 +214,7 @@ public class GameController {
         enemies.stream()
                 .filter(Enemy::isAlive)
                 .filter(e -> hero.getPosition().distanceTo(e.getPosition()) <= hero.getRange() + 2)
-                .forEach(e -> output.displayMessage(String.format("  - %s на %s HP: %d/%d",
+                .forEach(e -> output.displayMessage(String.format("  - %s at %s HP: %d/%d",
                         e.getName(),
                         e.getPosition().toString(),
                         e.getHealth(),
@@ -241,7 +247,7 @@ public class GameController {
         if (hero instanceof AbilityUser) {
             menu.append("3. Ability\n");
         }
-        menu.append("Your choice is : ");
+        menu.append("Your choice is: ");
         return menu.toString();
     }
 
@@ -274,7 +280,7 @@ public class GameController {
 
         if (target != null) {
             if (hero.isInRange(target)) {
-                hero.attack(target);
+                output.displayMessage(hero.attack(target));
             } else {
                 throw new GameException("The goal is out of reach.");
             }
@@ -316,7 +322,7 @@ public class GameController {
             output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Immediate Attack).",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
                     targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
-            enemy.attack(targetHero);
+            output.displayMessage(enemy.attack(targetHero));
 
             return;
         }
@@ -336,7 +342,7 @@ public class GameController {
             output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Post-Move Attack).",
                     enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
                     targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
-            enemy.attack(targetHero);
+            output.displayMessage(enemy.attack(targetHero));
         } else {
             if (enemy.getPosition().equals(originalPosition)) {
                 output.displayMessage(enemy.getName() + " couldn't find a free space to move and got stuck.");
@@ -408,10 +414,15 @@ public class GameController {
         });
 
         // Remove dead heroes from the board
-        heroes.stream().filter(h -> !h.isAlive()).forEach(hero -> {
-            board.removeUnit(hero);
-            output.displayMessage("Hero " + hero.getName() + " at position " + hero.getPosition().toString() + " fall.");
-        });
+        Iterator<Hero> heroIterator = heroes.iterator();
+        while (heroIterator.hasNext()) {
+            Hero hero = heroIterator.next();
+            if (!hero.isAlive()) {
+                board.removeUnit(hero);
+                output.displayMessage("Hero " + hero.getName() + " at position " + hero.getPosition().toString() + " has fallen.");
+                heroIterator.remove();
+            }
+        }
     }
 
     /**
@@ -435,7 +446,7 @@ public class GameController {
         output.displayShop(gold, heroes);
 
         while (true) {
-            int choice = input.getIntInput("Select upgrade or ‘5’ to exit: ");
+            int choice = input.getIntInput("Select upgrade or '5' to exit: ");
 
             if (choice == 5) {
                 output.displayMessage("Exiting the store.");
@@ -522,7 +533,7 @@ public class GameController {
         output.displayMessage("Remaining gold: " + gold);
         output.displayMessage("Heroes:");
         heroes.forEach(hero ->
-                output.displayMessage(String.format("  %s: %s (Ур.%d) HP: %d/%d, Damage: %d, Range: %d, Speed: %d",
+                output.displayMessage(String.format("  %s: %s (Lvl.%d) HP: %d/%d, Damage: %d, Range: %d, Speed: %d",
                         hero.getName(), hero.isAlive() ? "Alive" : "Fell",
                         hero.getLevel(), hero.getHealth(), hero.getMaxHealth(),
                         hero.getDamage(), hero.getRange(), hero.getSpeed()))
@@ -531,52 +542,28 @@ public class GameController {
 
     private void moveToward(Enemy enemy, Position targetPos) {
         Position current = enemy.getPosition();
-        Position bestNextPos = current;
-        int minDistance = current.distanceTo(targetPos);
-        // 1. Generate all possible move positions based on speed
-        List<Position> possibleMoves = new ArrayList<>();
-        for (int dx = -enemy.getSpeed(); dx <= enemy.getSpeed(); dx++) {
-            for (int dy = -enemy.getSpeed(); dy <= enemy.getSpeed(); dy++) {
-                // Check Manhattan distance for movement limit
-                if (Math.abs(dx) + Math.abs(dy) <= enemy.getSpeed()) {
-                    Position potentialNext = new Position(current.x() + dx, current.y() + dy);
-                    if (board.isValidPosition(potentialNext)) {
-                        possibleMoves.add(potentialNext);
-                    }
-                }
-            }
-        }
-        // Sort moves to prioritize those that close the distance the most
-        possibleMoves.sort(Comparator.comparingInt(pos -> pos.distanceTo(targetPos)));
 
-        // 2. Find the STRICTLY BEST (closest distance) empty spot
-        Position bestCloserSpot = current;
-        for (Position move : possibleMoves) {
-            if (board.isEmpty(move)) {
-                if (move.distanceTo(targetPos) < minDistance) {
-                    bestCloserSpot = move;
-                    break; // Found the best spot that closes the distance, we can stop
-                }
+        for (int step = 0; step < enemy.getSpeed(); step++) {
+            int nextX = current.x();
+            int nextY = current.y();
+
+            if (current.x() < targetPos.x()) {
+                nextX++;
+            } else if (current.x() > targetPos.x()) {
+                nextX--;
+            } else if (current.y() < targetPos.y()) {
+                nextY++;
+            } else if (current.y() > targetPos.y()) {
+                nextY--;
             }
-        }
-        // 3. Determine Final Position
-        if (!bestCloserSpot.equals(current)) {
-            // If we found a spot that is strictly closer, use it.
-            bestNextPos = bestCloserSpot;
-        } else {
-            // If no strictly closer spot was found (e.g., blocked or already adjacent)
-            for (Position move : possibleMoves) {
-                if (board.isEmpty(move)) {
-                    bestNextPos = move;
-                    break;
-                }
+
+            Position nextPos = new Position(nextX, nextY);
+            if (!board.isValidPosition(nextPos) || !board.isEmpty(nextPos)) {
+                break;
             }
-        }
-        // 4. Execute Movement
-        if (!bestNextPos.equals(current)) {
-            board.updatePosition(enemy, bestNextPos);
-        } else {
-            output.displayMessage(enemy.getName() + " couldn't find a free space to move and got stuck.");
+
+            board.updatePosition(enemy, nextPos);
+            current = nextPos;
         }
     }
 }

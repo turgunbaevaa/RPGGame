@@ -1,7 +1,7 @@
 package com.game.board;
 
 public class Board {
-    private final int SIZE = 10;
+    private static final int SIZE = 10;
     private final Locatable[][] grid;
 
     public Board() {
@@ -9,7 +9,6 @@ public class Board {
     }
 
     public boolean isValidPosition(Position pos) {
-        // Null check for robustness, though usually handled by callers
         if (pos == null) return false;
         return pos.x() >= 0 && pos.x() < SIZE && pos.y() >= 0 && pos.y() < SIZE;
     }
@@ -20,9 +19,7 @@ public class Board {
 
     public void place(Locatable unit) {
         if (unit == null || unit.getPosition() == null) {
-            // Using printf for structured error logging
-            System.err.printf("Error: Cannot place null unit or unit without position.%n");
-            return;
+            throw new IllegalArgumentException("Cannot place a null unit or a unit without a position.");
         }
         Position pos = unit.getPosition();
 
@@ -62,18 +59,15 @@ public class Board {
         }
 
         Position oldPos = unit.getPosition();
-        // 1. Check if the new position is occupied by another unit (excluding the unit itself)
         Locatable unitAtNewPos = grid[newPos.y()][newPos.x()];
         if (unitAtNewPos != null && unitAtNewPos != unit) {
             System.err.printf("Error: com.game.board.Position %s occupied by another unit: %s.%n",
                     newPos, unitAtNewPos);
             return;
         }
-        // 2. Remove unit from old position (safely using null/validity checks)
         if (oldPos != null && isValidPosition(oldPos) && grid[oldPos.y()][oldPos.x()] == unit) {
             grid[oldPos.y()][oldPos.x()] = null;
         }
-        // 3. Place unit in new position
         grid[newPos.y()][newPos.x()] = unit;
         unit.setPosition(newPos);
     }

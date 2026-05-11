@@ -9,8 +9,9 @@ import java.util.Comparator;
 import java.util.Optional;
 
 public class OrcShaman extends Enemy {
+    private static final int HEAL_RANGE = 2;
+
     private int healAmount;
-    private final int healRange = 2;
 
     public OrcShaman(Position position) {
         super("Orc-Shaman", 100, 5, 1, 2, position, 12);
@@ -18,6 +19,7 @@ public class OrcShaman extends Enemy {
 
     @Override
     public void levelUpStats(int wave) {
+        super.levelUpStats(wave);
         this.setBaseHealth(100);
         this.setBaseDamage(5);
         this.setBaseSpeed(2);
@@ -36,7 +38,7 @@ public class OrcShaman extends Enemy {
         Optional<Enemy> targetToHeal = allEnemies.stream()
                 .filter(e -> e != this && e.isAlive() && e.getHealth() < e.getMaxHealth())
                 // Optimally filter by range first
-                .filter(e -> this.getPosition().distanceTo(e.getPosition()) <= this.healRange)
+                .filter(e -> this.getPosition().distanceTo(e.getPosition()) <= HEAL_RANGE)
                 // Target the unit with the largest health deficit (most damage)
                 .max(Comparator.comparingInt(e -> (e.getMaxHealth() - e.getHealth())));
 
@@ -47,7 +49,7 @@ public class OrcShaman extends Enemy {
                     targetToHeal.get().getName(), this.healAmount, targetToHeal.get().getHealth(), targetToHeal.get().getMaxHealth());
         } else {
             System.out.printf("%s (%s) searches for a target to heal, but finds no wounded ally within %d cells.%n",
-                    this.getName(), this.getClass().getSimpleName(), this.healRange);
+                    this.getName(), this.getClass().getSimpleName(), HEAL_RANGE);
         }
     }
 

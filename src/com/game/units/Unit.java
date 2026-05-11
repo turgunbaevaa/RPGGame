@@ -33,28 +33,37 @@ public abstract class Unit implements Locatable {
     public abstract String getDisplaySymbol();
 
     // This is the default attack method for normal attacks
-    public final void attack(Unit target) {
-        attack(target, this.damage);
+    public final String attack(Unit target) {
+        return attack(target, this.damage);
     }
 
-    public final void attack(Unit target, int damageAmount) {
-        if (isInRange(target)) {
-            int oldTargetHealth = target.getHealth();
-            target.takeDamage(damageAmount);
-
-            System.out.printf("%s (%s) at position %s attacks %s (%s) at position %s, dealing %d damage.%n",
-                    this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
-                    target.getName(), target.getClass().getSimpleName(), target.getPosition().toString(),
-                    damageAmount);
-            System.out.printf("  Health %s: %d/%d (was %d)%n",
-                    target.getName(), target.getHealth(), target.getMaxHealth(), oldTargetHealth);
-
-            boolean targetDied = !target.isAlive();
-            if (targetDied) {
-                System.out.printf("   %s (%s) was defeated!%n", target.getName(), target.getClass().getSimpleName());
-            }
-
+    public final String attack(Unit target, int damageAmount) {
+        if (target == null) {
+            return this.getName() + " cannot attack because the target is missing.";
         }
+        if (this.position == null || target.getPosition() == null) {
+            return this.getName() + " cannot attack because one of the units has no position.";
+        }
+        if (!isInRange(target)) {
+            return this.getName() + " cannot attack because the target is out of range.";
+        }
+
+        int oldTargetHealth = target.getHealth();
+        target.takeDamage(damageAmount);
+
+        StringBuilder result = new StringBuilder();
+        result.append(String.format("%s (%s) at position %s attacks %s (%s) at position %s, dealing %d damage.%n",
+                this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
+                target.getName(), target.getClass().getSimpleName(), target.getPosition().toString(),
+                damageAmount));
+        result.append(String.format("  Health %s: %d/%d (was %d)",
+                target.getName(), target.getHealth(), target.getMaxHealth(), oldTargetHealth));
+
+        if (!target.isAlive()) {
+            result.append(String.format("%n   %s (%s) was defeated!", target.getName(), target.getClass().getSimpleName()));
+        }
+
+        return result.toString();
     }
 
     public final void takeDamage(int amount) {
@@ -63,6 +72,9 @@ public abstract class Unit implements Locatable {
 
     public final boolean isAlive() { return this.health > 0; }
     public final boolean isInRange(Unit target) {
+        if (target == null || this.position == null || target.getPosition() == null) {
+            return false;
+        }
         return this.position.distanceTo(target.getPosition()) <= this.range;
     }
 
