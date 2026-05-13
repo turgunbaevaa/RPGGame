@@ -19,16 +19,13 @@ import com.game.units.heroes.Healer;
 import com.game.units.enemies.OrcShaman;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 public class GameController {
-    private static final int MAX_TURNS = 10;
-    private static final int MAX_WAVES = 5;
+    private static final int MAX_TURNS = 8;
+    private static final int MAX_WAVES = 3;
 
     private final Board board;
     private final List<Hero> heroes;
@@ -74,7 +71,9 @@ public class GameController {
     }
 
     private void setupHeroes() {
-        heroes.forEach(board::removeUnit);
+        for (Hero h : heroes) {
+            board.removeUnit(h);
+        }
         heroes.clear();
 
         HeroType[] types = HeroType.values();
@@ -91,10 +90,12 @@ public class GameController {
     }
 
     private void spawnEnemiesWave() {
-        enemies.forEach(board::removeUnit);
+        for (Enemy e : enemies) {
+            board.removeUnit(e);
+        }
         enemies.clear();
 
-        int enemyCount = 3 + wave;
+        int enemyCount = 2 + wave;
         output.displayMessage("\n--- ENEMIES SPAWN ---");
 
         for (int i = 0; i < enemyCount; i++) {
@@ -114,25 +115,12 @@ public class GameController {
                     enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(), enemy.getGoldValue()));
         }
 
-        output.displayMessage("⚔️ Wave " + wave + " has started! Enemies: " + enemies.size());
+        output.displayMessage("Wave " + wave + " has started. Enemies: " + enemies.size());
     }
 
     private EnemyType selectRandomEnemyType() {
-        int totalWeight = 0;
-        for (EnemyType type : EnemyType.values()) {
-            totalWeight += type.getWeight();
-        }
-
-        int randomValue = random.nextInt(totalWeight);
-
-        int currentSum = 0;
-        for (EnemyType type : EnemyType.values()) {
-            currentSum += type.getWeight();
-            if (randomValue < currentSum) {
-                return type;
-            }
-        }
-        return EnemyType.GOBLIN_GRUNT;
+        EnemyType[] values = EnemyType.values();
+        return values[random.nextInt(values.length)];
     }
 
     // --- GAME LOOP ---
@@ -142,7 +130,7 @@ public class GameController {
             output.displayMessage("\n===== MOVE " + (turnCount + 1) + " =====");
             output.printBoard(board, heroes, enemies);
             output.displayUnitStats(heroes, enemies);
-            output.displayMessage("💰 GOLD: " + gold);
+            output.displayMessage("Gold: " + gold);
 
             // --- HERO PHASE ---
             output.displayMessage("\n--- HEROES PHASE ---");
@@ -152,11 +140,8 @@ public class GameController {
                     playerTurnIndividual(hero);
                 }
             }
-            // 2. Cleanup and printing occur ONCE after all heroes have acted
+            // Remove casualties after the hero phase (board updates before enemies act)
             cleanupDeadUnits();
-            output.printBoard(board, heroes, enemies);
-            output.displayUnitStats(heroes, enemies);
-
 
             // --- ENEMY PHASE ---
             output.displayMessage("\n--- ENEMIES PHASE ---");
@@ -170,18 +155,20 @@ public class GameController {
                 }
             }
 
-            // 2. Cleanup and printing occur ONCE after ALL enemies have acted
+            // Board and stats once per full turn (after hero + enemy phases)
             cleanupDeadUnits();
             output.printBoard(board, heroes, enemies);
             output.displayUnitStats(heroes, enemies);
 
 
             // --- END OF TURN CLEANUP ---
-            heroes.stream()
-                    .filter(hero -> hero instanceof Tauntable tauntable && tauntable.isTaunting())
-                    .forEach(hero -> ((Tauntable) hero).setTaunting(false));
+            for (Hero hero : heroes) {
+                if (hero instanceof Tauntable tauntable && tauntable.isTaunting()) {
+                    tauntable.setTaunting(false);
+                }
+            }
 
-            if (enemies.stream().noneMatch(Enemy::isAlive)) {
+            if (!anyAliveEnemy()) {
                 handleWaveCompletion();
             }
             turnCount++;
@@ -189,14 +176,18 @@ public class GameController {
         concludeGame();
     }
 
-    // Extracted wave completion logic
     private void handleWaveCompletion() {
-        output.displayMessage("\n🌟 Wave " + wave + " is over!");
+        output.displayMessage("\nWave " + wave + " is over.");
 
-        heroes.stream().filter(Hero::isAlive).forEach(Hero::levelUp);
+        for (Hero hero : heroes) {
+            if (hero.isAlive()) {
+                hero.levelUp();
+            }
+        }
 
         if (wave < MAX_WAVES) {
-            showShop();
+            Shop shop = new Shop(input, output);
+            gold = shop.run(gold, heroes, enemies);
         }
 
         wave++;
@@ -210,15 +201,18 @@ public class GameController {
     private void playerTurnIndividual(Hero hero) {
         output.displayMessage("\n--- Hero's turn: " + hero.getName() + " (HP: " + hero.getHealth() + "/" + hero.getMaxHealth() + ") ---");
 
-        // Simplified nearby enemy check for readability
-        enemies.stream()
-                .filter(Enemy::isAlive)
-                .filter(e -> hero.getPosition().distanceTo(e.getPosition()) <= hero.getRange() + 2)
-                .forEach(e -> output.displayMessage(String.format("  - %s at %s HP: %d/%d",
+        for (Enemy e : enemies) {
+            if (!e.isAlive()) {
+                continue;
+            }
+            if (hero.getPosition().distanceTo(e.getPosition()) <= hero.getRange() + 2) {
+                output.displayMessage(String.format("  - %s at %s HP: %d/%d",
                         e.getName(),
                         e.getPosition().toString(),
                         e.getHealth(),
-                        e.getMaxHealth())));
+                        e.getMaxHealth()));
+            }
+        }
 
         try {
             int choice = input.getIntInput(buildHeroMenu(hero));
@@ -316,62 +310,68 @@ public class GameController {
             }
         }
 
-        // --- 2. ATTACK FIRST CHECK ---
-        // If the unit is already in range, attack immediately and end the turn.
+        // --- 2. ATTACK FIRST ---
         if (enemy.isInRange(targetHero)) {
-            output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Immediate Attack).",
-                    enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
-                    targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
-            output.displayMessage(enemy.attack(targetHero));
-
+            performEnemyAttack(enemy, targetHero, "Immediate Attack");
             return;
         }
 
-        // --- 3. MOVEMENT  ---
+        // --- 3. MOVEMENT: one grid step at a time toward the hero; stop if blocked or out of moves. ---
         moveToward(enemy, targetHero.getPosition());
 
-        // Output movement message
         if (!enemy.getPosition().equals(originalPosition)) {
             output.displayMessage(String.format("%s (%s) moved toward %s. Current position: %s",
                     enemy.getName(), enemy.getClass().getSimpleName(), targetHero.getName(), enemy.getPosition().toString()));
         }
 
         // --- 4. POST-MOVEMENT ATTACK ---
-        // Check range again after movement
         if (enemy.isInRange(targetHero)) {
-            output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (Post-Move Attack).",
-                    enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
-                    targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString()));
-            output.displayMessage(enemy.attack(targetHero));
+            performEnemyAttack(enemy, targetHero, "Post-Move Attack");
+        } else if (enemy.getPosition().equals(originalPosition)) {
+            output.displayMessage(enemy.getName() + " couldn't find a free space to move and got stuck.");
         } else {
-            if (enemy.getPosition().equals(originalPosition)) {
-                output.displayMessage(enemy.getName() + " couldn't find a free space to move and got stuck.");
-            } else {
-                output.displayMessage(enemy.getName() + " moved, but the goal is still out of reach.");
-            }
+            output.displayMessage(enemy.getName() + " moved, but the goal is still out of reach.");
         }
     }
 
+    private void performEnemyAttack(Enemy enemy, Hero targetHero, String phaseDescription) {
+        output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (%s).",
+                enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
+                targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString(),
+                phaseDescription));
+        output.displayMessage(enemy.attack(targetHero));
+    }
+
     private Hero findClosestHero(Enemy enemy) {
-        Optional<Hero> tauntingHero = heroes.stream()
-                .filter(Hero::isAlive)
-                .filter(hero -> hero instanceof Tauntable tauntable && tauntable.isTaunting())
-                .findFirst();
+        for (Hero hero : heroes) {
+            if (hero.isAlive() && hero instanceof Tauntable tauntable && tauntable.isTaunting()) {
+                return hero;
+            }
+        }
 
-        // If a taunting hero exists, return them (Taunt overrides proximity)
-        return tauntingHero.orElseGet(() -> heroes.stream()
-                .filter(Hero::isAlive)
-                .min(Comparator.comparingInt(h -> h.getPosition().distanceTo(enemy.getPosition())))
-                .orElse(null));
-
-        // Otherwise, find the closest hero
+        Hero closest = null;
+        int bestDistance = Integer.MAX_VALUE;
+        Position enemyPos = enemy.getPosition();
+        for (Hero hero : heroes) {
+            if (!hero.isAlive()) {
+                continue;
+            }
+            int distance = hero.getPosition().distanceTo(enemyPos);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                closest = hero;
+            }
+        }
+        return closest;
     }
 
     private Enemy chooseTarget(Hero hero) {
-        List<Enemy> inRangeEnemies = enemies.stream()
-                .filter(Enemy::isAlive)
-                .filter(hero::isInRange)
-                .collect(Collectors.toList());
+        List<Enemy> inRangeEnemies = new ArrayList<>();
+        for (Enemy e : enemies) {
+            if (e.isAlive() && hero.isInRange(e)) {
+                inRangeEnemies.add(e);
+            }
+        }
 
         output.displayAvailableTargets(inRangeEnemies, hero);
 
@@ -401,19 +401,18 @@ public class GameController {
     // --- UTILITIES ---
 
     private void cleanupDeadUnits() {
-        // Collect gold and remove dead enemies from the board
-        enemies.removeIf(enemy -> {
+        Iterator<Enemy> enemyIterator = enemies.iterator();
+        while (enemyIterator.hasNext()) {
+            Enemy enemy = enemyIterator.next();
             if (!enemy.isAlive()) {
                 board.removeUnit(enemy);
                 gold += enemy.getGoldValue();
-                output.displayMessage(String.format("   %s (%s) was eliminated. Received %d gold(s). Total gold: %d%n",
+                output.displayMessage(String.format("   %s (%s) was eliminated. Received %d gold. Total gold: %d%n",
                         enemy.getName(), enemy.getClass().getSimpleName(), enemy.getGoldValue(), gold));
-                return true;
+                enemyIterator.remove();
             }
-            return false;
-        });
+        }
 
-        // Remove dead heroes from the board
         Iterator<Hero> heroIterator = heroes.iterator();
         while (heroIterator.hasNext()) {
             Hero hero = heroIterator.next();
@@ -426,105 +425,60 @@ public class GameController {
     }
 
     /**
-     * Finds the most wounded living enemy unit.
-     * Only targets enemies below 50% health for 'critical' healing priority.
-     * Used by OrcShaman AI.
+     * Living ally at or below 50% HP with the lowest current HP (OrcShaman heal target).
      */
-    private Enemy findWoundedAlly(List<Enemy> enemies) {
-        return enemies.stream()
-                .filter(Enemy::isAlive)
-                // Filter for targets critically wounded (50% or less HP)
-                .filter(e -> (double)e.getHealth() / e.getMaxHealth() <= 0.5)
-                // Find the one with the lowest absolute current HP
-                .min(Comparator.comparingInt(Enemy::getHealth))
-                .orElse(null);
-    }
-
-    // --- SHOP ---
-
-    private void showShop() {
-        output.displayShop(gold, heroes);
-
-        while (true) {
-            int choice = input.getIntInput("Select upgrade or '5' to exit: ");
-
-            if (choice == 5) {
-                output.displayMessage("Exiting the store.");
-                break;
-            }
-
-            List<Hero> aliveHeroes = heroes.stream().filter(Hero::isAlive).collect(Collectors.toList());
-            if (aliveHeroes.isEmpty()) {
-                output.displayMessage("No alive heroes to upgrade.");
+    private Enemy findWoundedAlly(List<Enemy> enemyList) {
+        Enemy best = null;
+        int lowestHp = Integer.MAX_VALUE;
+        for (Enemy e : enemyList) {
+            if (!e.isAlive()) {
                 continue;
             }
-
-            Hero targetHero = selectHeroForUpgrade(aliveHeroes);
-            if (targetHero == null) continue;
-
-            handleUpgradePurchase(choice, targetHero);
+            if (e.getMaxHealth() <= 0) {
+                continue;
+            }
+            double ratio = (double) e.getHealth() / e.getMaxHealth();
+            if (ratio > 0.5) {
+                continue;
+            }
+            if (e.getHealth() < lowestHp) {
+                lowestHp = e.getHealth();
+                best = e;
+            }
         }
+        return best;
     }
 
-    private Hero selectHeroForUpgrade(List<Hero> aliveHeroes) {
-        int heroIndex = input.getIntInput("Enter hero number: ");
-
-        if (heroIndex >= 0 && heroIndex < aliveHeroes.size()) {
-            return aliveHeroes.get(heroIndex);
-        } else {
-            output.displayError("Incorrect hero number.");
-            return null;
+    private boolean hasAliveHero() {
+        for (Hero h : heroes) {
+            if (h.isAlive()) {
+                return true;
+            }
         }
+        return false;
     }
 
-    private void handleUpgradePurchase(int choice, Hero targetHero) {
-        int cost;
-        String upgradeType;
-
-        switch (choice) {
-            case 1: cost = 20; upgradeType = "HP"; break;
-            case 2: cost = 15; upgradeType = "Damage"; break;
-            case 3: cost = 25; upgradeType = "Speed"; break;
-            case 4: cost = 20; upgradeType = "Range"; break;
-            default:
-                output.displayError("Incorrect upgrade selection.");
-                return;
+    private boolean anyAliveEnemy() {
+        for (Enemy e : enemies) {
+            if (e.isAlive()) {
+                return true;
+            }
         }
-
-        if (gold >= cost) {
-            gold -= cost;
-            applyUpgrade(choice, targetHero);
-            output.displayMessage(String.format("Successfully improved %s %s by %s. Gold: %d%n",
-                    targetHero.getName(), upgradeType, targetHero.getPosition().toString(), gold));
-            output.displayUnitStats(heroes, enemies);
-        } else {
-            output.displayMessage(String.format("Not enough gold for this upgrade! You need %d, you have %d.", cost, gold));
-        }
-    }
-
-    private void applyUpgrade(int choice, Hero targetHero) {
-        switch (choice) {
-            case 1: targetHero.upgradeHealthStat(20); break;
-            case 2: targetHero.upgradeDamageStat(5); break;
-            case 3: targetHero.upgradeSpeedStat(1); break;
-            case 4: targetHero.upgradeRangeStat(1); break;
-        }
+        return false;
     }
 
     // --- GAME END ---
 
     private boolean isGameOver() {
-        boolean allHeroesDead = heroes.stream().noneMatch(Hero::isAlive);
-        boolean allWavesCleared = wave > MAX_WAVES;
-        return allHeroesDead || allWavesCleared;
+        return !hasAliveHero() || wave > MAX_WAVES;
     }
 
     private void concludeGame() {
         output.displayMessage("\n===== GAME IS OVER =====");
-        if (heroes.stream().noneMatch(Hero::isAlive)) {
+        if (!hasAliveHero()) {
             output.displayMessage("Defeat. All heroes have fallen.");
         } else if (wave > MAX_WAVES) {
-            output.displayMessage("🏆 Victory! All " + MAX_WAVES + " waves repelled!");
+            output.displayMessage("Victory! All " + MAX_WAVES + " waves repelled.");
         } else {
             output.displayMessage("The game is over. Number of moves: " + turnCount);
         }
@@ -532,29 +486,37 @@ public class GameController {
         output.displayMessage("Waves passed: " + (wave - 1));
         output.displayMessage("Remaining gold: " + gold);
         output.displayMessage("Heroes:");
-        heroes.forEach(hero ->
-                output.displayMessage(String.format("  %s: %s (Lvl.%d) HP: %d/%d, Damage: %d, Range: %d, Speed: %d",
-                        hero.getName(), hero.isAlive() ? "Alive" : "Fell",
-                        hero.getLevel(), hero.getHealth(), hero.getMaxHealth(),
-                        hero.getDamage(), hero.getRange(), hero.getSpeed()))
-        );
+        for (Hero hero : heroes) {
+            output.displayMessage(String.format("  %s: %s (Lvl.%d) HP: %d/%d, Damage: %d, Range: %d, Speed: %d",
+                    hero.getName(), hero.isAlive() ? "Alive" : "Fell",
+                    hero.getLevel(), hero.getHealth(), hero.getMaxHealth(),
+                    hero.getDamage(), hero.getRange(), hero.getSpeed()));
+        }
     }
 
+    /**
+     * Greedy chase: each step moves one cell along x toward the target, else along y.
+     * Stops early if the next cell is off the map or occupied.
+     */
     private void moveToward(Enemy enemy, Position targetPos) {
-        Position current = enemy.getPosition();
+        int targetX = targetPos.getX();
+        int targetY = targetPos.getY();
 
         for (int step = 0; step < enemy.getSpeed(); step++) {
-            int nextX = current.getX();
-            int nextY = current.getY();
+            Position here = enemy.getPosition();
+            int curX = here.getX();
+            int curY = here.getY();
 
-            if (current.getX() < targetPos.getX()) {
-                nextX++;
-            } else if (current.getX() > targetPos.getX()) {
-                nextX--;
-            } else if (current.getY() < targetPos.getY()) {
-                nextY++;
-            } else if (current.getY() > targetPos.getY()) {
-                nextY--;
+            if (curX == targetX && curY == targetY) {
+                break;
+            }
+
+            int nextX = curX;
+            int nextY = curY;
+            if (curX != targetX) {
+                nextX = curX + (curX < targetX ? 1 : -1);
+            } else {
+                nextY = curY + (curY < targetY ? 1 : -1);
             }
 
             Position nextPos = new Position(nextX, nextY);
@@ -563,7 +525,6 @@ public class GameController {
             }
 
             board.updatePosition(enemy, nextPos);
-            current = nextPos;
         }
     }
 }

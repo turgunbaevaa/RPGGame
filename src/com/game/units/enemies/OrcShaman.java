@@ -1,12 +1,11 @@
 package com.game.units.enemies;
+
 import com.game.board.Board;
 import com.game.board.Position;
 import com.game.units.Enemy;
 import com.game.units.Hero;
 
 import java.util.List;
-import java.util.Comparator;
-import java.util.Optional;
 
 public class OrcShaman extends Enemy {
     private static final int HEAL_RANGE = 2;
@@ -34,19 +33,27 @@ public class OrcShaman extends Enemy {
 
     @Override
     public void useAbility(List<Hero> allHeroes, List<Enemy> allEnemies, Board board) {
-        // Find the most wounded, alive, non-self ally within range.
-        Optional<Enemy> targetToHeal = allEnemies.stream()
-                .filter(e -> e != this && e.isAlive() && e.getHealth() < e.getMaxHealth())
-                // Optimally filter by range first
-                .filter(e -> this.getPosition().distanceTo(e.getPosition()) <= HEAL_RANGE)
-                // Target the unit with the largest health deficit (most damage)
-                .max(Comparator.comparingInt(e -> (e.getMaxHealth() - e.getHealth())));
+        Enemy targetToHeal = null;
+        int bestDeficit = -1;
+        for (Enemy e : allEnemies) {
+            if (e == this || !e.isAlive() || e.getHealth() >= e.getMaxHealth()) {
+                continue;
+            }
+            if (this.getPosition().distanceTo(e.getPosition()) > HEAL_RANGE) {
+                continue;
+            }
+            int deficit = e.getMaxHealth() - e.getHealth();
+            if (deficit > bestDeficit) {
+                bestDeficit = deficit;
+                targetToHeal = e;
+            }
+        }
 
-        if (targetToHeal.isPresent()) {
-            targetToHeal.get().increaseHealth(this.healAmount);
+        if (targetToHeal != null) {
+            targetToHeal.increaseHealth(this.healAmount);
             System.out.printf("%s (%s) at position %s heals %s by %d health. Health of the target: %d/%d.%n",
                     this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
-                    targetToHeal.get().getName(), this.healAmount, targetToHeal.get().getHealth(), targetToHeal.get().getMaxHealth());
+                    targetToHeal.getName(), this.healAmount, targetToHeal.getHealth(), targetToHeal.getMaxHealth());
         } else {
             System.out.printf("%s (%s) searches for a target to heal, but finds no wounded ally within %d cells.%n",
                     this.getName(), this.getClass().getSimpleName(), HEAL_RANGE);

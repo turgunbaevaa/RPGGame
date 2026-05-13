@@ -1,10 +1,12 @@
 package com.game.io;
+
 import com.game.board.Board;
 import com.game.units.Enemy;
 import com.game.units.Hero;
 import com.game.units.Tauntable;
 import com.game.units.Unit;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ConsoleOutput implements GameOutput {
@@ -16,7 +18,7 @@ public class ConsoleOutput implements GameOutput {
 
     @Override
     public void displayError(String message) {
-        System.err.println("ERROR: " + message); // Use System.err for errors
+        System.err.println("ERROR: " + message);
     }
 
     @Override
@@ -30,12 +32,16 @@ public class ConsoleOutput implements GameOutput {
             }
         }
 
-        heroes.stream()
-                .filter(Hero::isAlive)
-                .forEach(hero -> cells[hero.getPosition().getY()][hero.getPosition().getX()] = hero.getDisplaySymbol());
-        enemies.stream()
-                .filter(Enemy::isAlive)
-                .forEach(enemy -> cells[enemy.getPosition().getY()][enemy.getPosition().getX()] = enemy.getDisplaySymbol());
+        for (Hero hero : heroes) {
+            if (hero.isAlive()) {
+                cells[hero.getPosition().getY()][hero.getPosition().getX()] = hero.getDisplaySymbol();
+            }
+        }
+        for (Enemy enemy : enemies) {
+            if (enemy.isAlive()) {
+                cells[enemy.getPosition().getY()][enemy.getPosition().getX()] = enemy.getDisplaySymbol();
+            }
+        }
 
         System.out.println("   0 1 2 3 4 5 6 7 8 9");
         System.out.println("  ---------------------");
@@ -52,8 +58,10 @@ public class ConsoleOutput implements GameOutput {
     @Override
     public void displayUnitStats(List<Hero> heroes, List<Enemy> enemies) {
         System.out.println("\n--- The State of Heroes ---");
-        heroes.stream().filter(Unit::isAlive).forEach(hero -> {
-            // Prepare the taunt status string with a leading space if it exists
+        for (Hero hero : heroes) {
+            if (!hero.isAlive()) {
+                continue;
+            }
             String tauntStatus = (hero instanceof Tauntable tauntable && tauntable.isTaunting()) ? " (Provocation)" : "";
 
             System.out.printf("  %s%s (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
@@ -62,31 +70,39 @@ public class ConsoleOutput implements GameOutput {
                     hero.getLevel(),
                     hero.getPosition().toString(), hero.getHealth(), hero.getMaxHealth(),
                     hero.getDamage(), hero.getRange(), hero.getSpeed());
-        });
+        }
 
         System.out.println("\n--- The State of Enemies ---");
-        enemies.stream().filter(Unit::isAlive).forEach(enemy ->
-                System.out.printf("%s (%s) (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
-                        enemy.getName(), enemy.getClass().getSimpleName(), enemy.getLevel(), enemy.getPosition().toString(),
-                        enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(),
-                        enemy.getRange(), enemy.getSpeed())
-        );
+        for (Enemy enemy : enemies) {
+            if (!enemy.isAlive()) {
+                continue;
+            }
+            System.out.printf("%s (%s) (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
+                    enemy.getName(), enemy.getClass().getSimpleName(), enemy.getLevel(), enemy.getPosition().toString(),
+                    enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(),
+                    enemy.getRange(), enemy.getSpeed());
+        }
         System.out.println("------------------------");
     }
 
     @Override
     public void displayShop(int gold, List<Hero> heroes) {
         System.out.println("\n===== SHOP =====");
-        System.out.println("Your Gold: " + gold);
+        System.out.println("Your gold: " + gold);
         System.out.println("Available upgrades (cost):");
-        System.out.println("1. Increase HP of the hero by 20 (20 golds)");
-        System.out.println("2. Increase Damage of the hero by 5 (15 golds)");
-        System.out.println("3. Increase Speed of the hero by 1 (25 golds)");
-        System.out.println("4. Increase Range of the hero by 1 (20 golds)");
+        System.out.println("1. Increase HP of the hero by 20 (20 gold)");
+        System.out.println("2. Increase Damage of the hero by 5 (15 gold)");
+        System.out.println("3. Increase Speed of the hero by 1 (25 gold)");
+        System.out.println("4. Increase Range of the hero by 1 (20 gold)");
         System.out.println("5. Exit the shop");
 
         System.out.println("Select a hero to upgrade:");
-        List<Hero> aliveHeroes = heroes.stream().filter(Hero::isAlive).toList();
+        List<Hero> aliveHeroes = new ArrayList<>();
+        for (Hero h : heroes) {
+            if (h.isAlive()) {
+                aliveHeroes.add(h);
+            }
+        }
         if (aliveHeroes.isEmpty()) {
             System.out.println("No heroes available for upgrade.");
         } else {
