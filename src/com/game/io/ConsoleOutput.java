@@ -32,10 +32,10 @@ public class ConsoleOutput implements GameOutput {
 
         heroes.stream()
                 .filter(Hero::isAlive)
-                .forEach(hero -> cells[hero.getPosition().y()][hero.getPosition().x()] = hero.getDisplaySymbol());
+                .forEach(hero -> cells[hero.getPosition().getY()][hero.getPosition().getX()] = hero.getDisplaySymbol());
         enemies.stream()
                 .filter(Enemy::isAlive)
-                .forEach(enemy -> cells[enemy.getPosition().y()][enemy.getPosition().x()] = enemy.getDisplaySymbol());
+                .forEach(enemy -> cells[enemy.getPosition().getY()][enemy.getPosition().getX()] = enemy.getDisplaySymbol());
 
         System.out.println("   0 1 2 3 4 5 6 7 8 9");
         System.out.println("  ---------------------");

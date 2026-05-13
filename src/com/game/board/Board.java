@@ -10,11 +10,11 @@ public class Board {
 
     public boolean isValidPosition(Position pos) {
         if (pos == null) return false;
-        return pos.x() >= 0 && pos.x() < SIZE && pos.y() >= 0 && pos.y() < SIZE;
+        return pos.getX() >= 0 && pos.getX() < SIZE && pos.getY() >= 0 && pos.getY() < SIZE;
     }
 
     public boolean isEmpty(Position pos) {
-        return isValidPosition(pos) && grid[pos.y()][pos.x()] == null;
+        return isValidPosition(pos) && grid[pos.getY()][pos.getX()] == null;
     }
 
     public void place(Locatable unit) {
@@ -27,11 +27,11 @@ public class Board {
             System.err.printf("Error: com.game.board.Position %s is invalid.%n", pos);
         } else if (!isEmpty(pos)) {
             // Displaying the unit that is occupying the spot for better debugging
-            Locatable blockingUnit = grid[pos.y()][pos.x()];
+            Locatable blockingUnit = grid[pos.getY()][pos.getX()];
             System.err.printf("Error: com.game.board.Position %s is occupied by %s (%s).%n",
                     pos, blockingUnit.toString(), blockingUnit.getClass().getSimpleName());
         } else {
-            grid[pos.y()][pos.x()] = unit;
+            grid[pos.getY()][pos.getX()] = unit;
         }
     }
 
@@ -42,8 +42,8 @@ public class Board {
         }
         Position pos = unit.getPosition();
 
-        if (isValidPosition(pos) && grid[pos.y()][pos.x()] == unit) {
-            grid[pos.y()][pos.x()] = null;
+        if (isValidPosition(pos) && grid[pos.getY()][pos.getX()] == unit) {
+            grid[pos.getY()][pos.getX()] = null;
         }
     }
 
@@ -59,16 +59,16 @@ public class Board {
         }
 
         Position oldPos = unit.getPosition();
-        Locatable unitAtNewPos = grid[newPos.y()][newPos.x()];
+        Locatable unitAtNewPos = grid[newPos.getY()][newPos.getX()];
         if (unitAtNewPos != null && unitAtNewPos != unit) {
             System.err.printf("Error: com.game.board.Position %s occupied by another unit: %s.%n",
                     newPos, unitAtNewPos);
             return;
         }
-        if (oldPos != null && isValidPosition(oldPos) && grid[oldPos.y()][oldPos.x()] == unit) {
-            grid[oldPos.y()][oldPos.x()] = null;
+        if (oldPos != null && isValidPosition(oldPos) && grid[oldPos.getY()][oldPos.getX()] == unit) {
+            grid[oldPos.getY()][oldPos.getX()] = null;
         }
-        grid[newPos.y()][newPos.x()] = unit;
+        grid[newPos.getY()][newPos.getX()] = unit;
         unit.setPosition(newPos);
     }
 
@@ -76,6 +76,6 @@ public class Board {
         if (!isValidPosition(pos)) {
             return null;
         }
-        return grid[pos.y()][pos.x()];
+        return grid[pos.getY()][pos.getX()];
     }
 }

@@ -31,8 +31,8 @@ public class WarriorKnockbackAbility implements HeroAbility {
             int pushDistance = 2;
 
             // Calculate the vector from hero to enemy
-            int deltaX = currentPos.x() - heroPos.x();
-            int deltaY = currentPos.y() - heroPos.y();
+            int deltaX = currentPos.getX() - heroPos.getX();
+            int deltaY = currentPos.getY() - heroPos.getY();
 
             // Normalize the vector to get the direction
             int dirX = Integer.compare(deltaX, 0);
@@ -42,7 +42,7 @@ public class WarriorKnockbackAbility implements HeroAbility {
 
             // Find the furthest possible empty spot in the push direction
             for (int i = 0; i < pushDistance; i++) {
-                Position nextPos = new Position(finalPushPos.x() + dirX, finalPushPos.y() + dirY);
+                Position nextPos = new Position(finalPushPos.getX() + dirX, finalPushPos.getY() + dirY);
 
                 if (board.isValidPosition(nextPos) && board.isEmpty(nextPos)) {
                     finalPushPos = nextPos;

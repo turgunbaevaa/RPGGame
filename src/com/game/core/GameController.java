@@ -544,16 +544,16 @@ public class GameController {
         Position current = enemy.getPosition();
 
         for (int step = 0; step < enemy.getSpeed(); step++) {
-            int nextX = current.x();
-            int nextY = current.y();
+            int nextX = current.getX();
+            int nextY = current.getY();
 
-            if (current.x() < targetPos.x()) {
+            if (current.getX() < targetPos.getX()) {
                 nextX++;
-            } else if (current.x() > targetPos.x()) {
+            } else if (current.getX() > targetPos.getX()) {
                 nextX--;
-            } else if (current.y() < targetPos.y()) {
+            } else if (current.getY() < targetPos.getY()) {
                 nextY++;
-            } else if (current.y() > targetPos.y()) {
+            } else if (current.getY() > targetPos.getY()) {
                 nextY--;
             }
 
