@@ -133,7 +133,7 @@ public class GameController {
             printTurnEnd();
             resetHeroTaunts();
 
-            if (!anyAliveEnemy()) {
+            if (!hasAliveEnemies()) {
                 handleWaveCompletion();
             }
             turnCount++;
@@ -183,13 +183,17 @@ public class GameController {
             int choice = input.getIntInput(buildHeroMenu(hero));
             if (choice == 1) {
                 handleHeroMovement(hero);
-            } else if (choice == 2) {
-                handleHeroAttack(hero);
-            } else if (choice == 3 && hero instanceof AbilityUser abilityUser){
-                handleHeroAbility(abilityUser);
-            } else {
-                throw new GameException("Wrong choice. Turn skipped.");
+                return;
             }
+            if (choice == 2) {
+                handleHeroAttack(hero);
+                return;
+            }
+            if (choice == 3 && hero instanceof AbilityUser abilityUser) {
+                handleHeroAbility(abilityUser);
+                return;
+            }
+            throw new GameException("Wrong choice. Turn skipped.");
         } catch (GameException e) {
             output.displayError(e.getMessage());
         } catch (Exception e) { // Catch other potential exceptions (like NumberFormatException from PositionInput)
@@ -414,23 +418,23 @@ public class GameController {
         return best;
     }
 
-    private boolean hasAliveHero() {
+    private boolean hasAliveHeroes() {
         return hasAliveUnit(heroes);
     }
 
-    private boolean anyAliveEnemy() {
+    private boolean hasAliveEnemies() {
         return hasAliveUnit(enemies);
     }
 
     // --- GAME END ---
 
     private boolean isGameOver() {
-        return !hasAliveHero() || wave > MAX_WAVES;
+        return !hasAliveHeroes() || wave > MAX_WAVES;
     }
 
     private void concludeGame() {
         output.displayMessage("\n===== GAME IS OVER =====");
-        if (!hasAliveHero()) {
+        if (!hasAliveHeroes()) {
             output.displayMessage("Defeat. All heroes have fallen.");
         } else if (wave > MAX_WAVES) {
             output.displayMessage("Victory! All " + MAX_WAVES + " waves repelled.");
