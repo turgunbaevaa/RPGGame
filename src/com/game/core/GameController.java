@@ -7,6 +7,7 @@ import com.game.abilities.AbilityUser;
 import com.game.units.Hero;
 import com.game.units.Enemy;
 import com.game.units.Tauntable;
+import com.game.units.Unit;
 
 import com.game.factory.UnitFactory;
 import com.game.factory.HeroType;
@@ -26,6 +27,11 @@ import java.util.Random;
 public class GameController {
     private static final int MAX_TURNS = 8;
     private static final int MAX_WAVES = 3;
+    private static final int HERO_ZONE_MIN = 0;
+    private static final int HERO_ZONE_MAX = 4;
+    private static final int ENEMY_ZONE_MIN = 5;
+    private static final int ENEMY_ZONE_MAX = 9;
+    private static final int MAX_RANDOM_POSITION_ATTEMPTS = 1000;
 
     private final Board board;
     private final List<Hero> heroes;
@@ -62,7 +68,7 @@ public class GameController {
             int y = random.nextInt(maxY - minY + 1) + minY;
             pos = new Position(x, y);
             attempts++;
-            if (attempts > 1000) {
+            if (attempts > MAX_RANDOM_POSITION_ATTEMPTS) {
                 output.displayError("Unable to find an available spot after numerous attempts. The board may be full.");
                 return null;
             }
@@ -71,35 +77,23 @@ public class GameController {
     }
 
     private void setupHeroes() {
-        for (Hero h : heroes) {
-            board.removeUnit(h);
-        }
+        clearUnitsFromBoard(heroes);
         heroes.clear();
 
-        HeroType[] types = HeroType.values();
-        for (HeroType type : types) {
-            Position pos = getRandomEmptyPosition(0, 4, 0, 4);
-            if (pos != null) {
-                Hero hero = unitFactory.createHero(type, pos);
-                heroes.add(hero);
-                board.place(hero);
-            } else {
-                output.displayError("Unable to place hero " + type + " due to lack of available slots.");
-            }
+        for (HeroType type : HeroType.values()) {
+            createAndPlaceHero(type);
         }
     }
 
     private void spawnEnemiesWave() {
-        for (Enemy e : enemies) {
-            board.removeUnit(e);
-        }
+        clearUnitsFromBoard(enemies);
         enemies.clear();
 
         int enemyCount = 2 + wave;
         output.displayMessage("\n--- ENEMIES SPAWN ---");
 
         for (int i = 0; i < enemyCount; i++) {
-            Position spawnPos = getRandomEmptyPosition(5, 9, 5, 9);
+            Position spawnPos = getRandomEmptyPosition(ENEMY_ZONE_MIN, ENEMY_ZONE_MAX, ENEMY_ZONE_MIN, ENEMY_ZONE_MAX);
             if (spawnPos == null) {
                 output.displayError("Unable to locate enemy spawn point #" + (i + 1) + ". The map may be full.");
                 break;
@@ -111,7 +105,7 @@ public class GameController {
             enemies.add(enemy);
             board.place(enemy);
             output.displayMessage(String.format("Enemy %s (%s) created on %s. HP: %d/%d, Damage: %d, Gold: %d",
-                    enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
+                    enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition(),
                     enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(), enemy.getGoldValue()));
         }
 
@@ -127,46 +121,17 @@ public class GameController {
 
     public void startGame() {
         while (turnCount < MAX_TURNS && !isGameOver()) {
-            output.displayMessage("\n===== MOVE " + (turnCount + 1) + " =====");
-            output.printBoard(board, heroes, enemies);
-            output.displayUnitStats(heroes, enemies);
-            output.displayMessage("Gold: " + gold);
+            printTurnStart();
 
-            // --- HERO PHASE ---
-            output.displayMessage("\n--- HEROES PHASE ---");
-            // 1. Process all hero actions
-            for (Hero hero : heroes) {
-                if (hero.isAlive()) {
-                    playerTurnIndividual(hero);
-                }
-            }
-            // Remove casualties after the hero phase (board updates before enemies act)
+            runHeroesPhase();
             cleanupDeadUnits();
 
-            // --- ENEMY PHASE ---
-            output.displayMessage("\n--- ENEMIES PHASE ---");
-
-            // 1. Use a copy to safely iterate over the starting enemies list
-            List<Enemy> currentEnemies = new ArrayList<>(enemies);
-            for (Enemy enemy : currentEnemies) {
-                // Only act if the enemy is still alive (it might have died during a hero's previous turn/ability)
-                if (enemy.isAlive()) {
-                    performEnemyAction(enemy);
-                }
-            }
+            runEnemiesPhase();
 
             // Board and stats once per full turn (after hero + enemy phases)
             cleanupDeadUnits();
-            output.printBoard(board, heroes, enemies);
-            output.displayUnitStats(heroes, enemies);
-
-
-            // --- END OF TURN CLEANUP ---
-            for (Hero hero : heroes) {
-                if (hero instanceof Tauntable tauntable && tauntable.isTaunting()) {
-                    tauntable.setTaunting(false);
-                }
-            }
+            printTurnEnd();
+            resetHeroTaunts();
 
             if (!anyAliveEnemy()) {
                 handleWaveCompletion();
@@ -208,7 +173,7 @@ public class GameController {
             if (hero.getPosition().distanceTo(e.getPosition()) <= hero.getRange() + 2) {
                 output.displayMessage(String.format("  - %s at %s HP: %d/%d",
                         e.getName(),
-                        e.getPosition().toString(),
+                        e.getPosition(),
                         e.getHealth(),
                         e.getMaxHealth()));
             }
@@ -336,8 +301,8 @@ public class GameController {
 
     private void performEnemyAttack(Enemy enemy, Hero targetHero, String phaseDescription) {
         output.displayMessage(String.format("%s (%s) at position %s attacks %s (%s) at position %s (%s).",
-                enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition().toString(),
-                targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition().toString(),
+                enemy.getName(), enemy.getClass().getSimpleName(), enemy.getPosition(),
+                targetHero.getName(), targetHero.getClass().getSimpleName(), targetHero.getPosition(),
                 phaseDescription));
         output.displayMessage(enemy.attack(targetHero));
     }
@@ -418,7 +383,7 @@ public class GameController {
             Hero hero = heroIterator.next();
             if (!hero.isAlive()) {
                 board.removeUnit(hero);
-                output.displayMessage("Hero " + hero.getName() + " at position " + hero.getPosition().toString() + " has fallen.");
+                output.displayMessage("Hero " + hero.getName() + " at position " + hero.getPosition() + " has fallen.");
                 heroIterator.remove();
             }
         }
@@ -450,21 +415,11 @@ public class GameController {
     }
 
     private boolean hasAliveHero() {
-        for (Hero h : heroes) {
-            if (h.isAlive()) {
-                return true;
-            }
-        }
-        return false;
+        return hasAliveUnit(heroes);
     }
 
     private boolean anyAliveEnemy() {
-        for (Enemy e : enemies) {
-            if (e.isAlive()) {
-                return true;
-            }
-        }
-        return false;
+        return hasAliveUnit(enemies);
     }
 
     // --- GAME END ---
@@ -526,5 +481,71 @@ public class GameController {
 
             board.updatePosition(enemy, nextPos);
         }
+    }
+
+    private <T extends Locatable> void clearUnitsFromBoard(List<T> units) {
+        for (T unit : units) {
+            board.removeUnit(unit);
+        }
+    }
+
+    private void createAndPlaceHero(HeroType type) {
+        Position pos = getRandomEmptyPosition(HERO_ZONE_MIN, HERO_ZONE_MAX, HERO_ZONE_MIN, HERO_ZONE_MAX);
+        if (pos == null) {
+            output.displayError("Unable to place hero " + type + " due to lack of available slots.");
+            return;
+        }
+
+        Hero hero = unitFactory.createHero(type, pos);
+        heroes.add(hero);
+        board.place(hero);
+    }
+
+    private void printTurnStart() {
+        output.displayMessage("\n===== MOVE " + (turnCount + 1) + " =====");
+        output.printBoard(board, heroes, enemies);
+        output.displayUnitStats(heroes, enemies);
+        output.displayMessage("Gold: " + gold);
+    }
+
+    private void runHeroesPhase() {
+        output.displayMessage("\n--- HEROES PHASE ---");
+        for (Hero hero : heroes) {
+            if (hero.isAlive()) {
+                playerTurnIndividual(hero);
+            }
+        }
+    }
+
+    private void runEnemiesPhase() {
+        output.displayMessage("\n--- ENEMIES PHASE ---");
+        List<Enemy> currentEnemies = new ArrayList<>(enemies);
+        for (Enemy enemy : currentEnemies) {
+            if (enemy.isAlive()) {
+                performEnemyAction(enemy);
+            }
+        }
+    }
+
+    private void printTurnEnd() {
+        output.printBoard(board, heroes, enemies);
+        output.displayUnitStats(heroes, enemies);
+    }
+
+    private void resetHeroTaunts() {
+        for (Hero hero : heroes) {
+            if (hero instanceof Tauntable tauntable && tauntable.isTaunting()) {
+                tauntable.setTaunting(false);
+            }
+        }
+    }
+
+    private <T extends Unit> boolean hasAliveUnit(List<T> units) {
+        for (T unit : units) {
+            if (unit.isAlive()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
