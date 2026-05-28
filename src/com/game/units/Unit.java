@@ -53,8 +53,8 @@ public abstract class Unit implements Locatable {
 
         StringBuilder result = new StringBuilder();
         result.append(String.format("%s (%s) at position %s attacks %s (%s) at position %s, dealing %d damage.%n",
-                this.getName(), this.getClass().getSimpleName(), this.getPosition().toString(),
-                target.getName(), target.getClass().getSimpleName(), target.getPosition().toString(),
+                this.getName(), this.getClass().getSimpleName(), this.getPosition(),
+                target.getName(), target.getClass().getSimpleName(), target.getPosition(),
                 damageAmount));
         result.append(String.format("  Health %s: %d/%d (was %d)",
                 target.getName(), target.getHealth(), target.getMaxHealth(), oldTargetHealth));

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConsoleOutput implements GameOutput {
+    private static final int BOARD_SIZE = 10;
 
     @Override
     public void displayMessage(String message) {
@@ -23,11 +24,10 @@ public class ConsoleOutput implements GameOutput {
 
     @Override
     public void printBoard(Board board, List<Hero> heroes, List<Enemy> enemies) {
-        final int size = 10;
-        String[][] cells = new String[size][size];
+        String[][] cells = new String[BOARD_SIZE][BOARD_SIZE];
 
-        for (int y = 0; y < size; y++) {
-            for (int x = 0; x < size; x++) {
+        for (int y = 0; y < BOARD_SIZE; y++) {
+            for (int x = 0; x < BOARD_SIZE; x++) {
                 cells[y][x] = ".";
             }
         }
@@ -45,9 +45,9 @@ public class ConsoleOutput implements GameOutput {
 
         System.out.println("   0 1 2 3 4 5 6 7 8 9");
         System.out.println("  ---------------------");
-        for (int y = 0; y < size; y++) {
+        for (int y = 0; y < BOARD_SIZE; y++) {
             System.out.print(y + " |");
-            for (int x = 0; x < size; x++) {
+            for (int x = 0; x < BOARD_SIZE; x++) {
                 System.out.print(cells[y][x] + " ");
             }
             System.out.println("|");
@@ -58,30 +58,10 @@ public class ConsoleOutput implements GameOutput {
     @Override
     public void displayUnitStats(List<Hero> heroes, List<Enemy> enemies) {
         System.out.println("\n--- The State of Heroes ---");
-        for (Hero hero : heroes) {
-            if (!hero.isAlive()) {
-                continue;
-            }
-            String tauntStatus = (hero instanceof Tauntable tauntable && tauntable.isTaunting()) ? " (Provocation)" : "";
-
-            System.out.printf("  %s%s (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
-                    hero.getName(),
-                    tauntStatus,
-                    hero.getLevel(),
-                    hero.getPosition().toString(), hero.getHealth(), hero.getMaxHealth(),
-                    hero.getDamage(), hero.getRange(), hero.getSpeed());
-        }
+        printAliveUnits(heroes, this::printHeroStats);
 
         System.out.println("\n--- The State of Enemies ---");
-        for (Enemy enemy : enemies) {
-            if (!enemy.isAlive()) {
-                continue;
-            }
-            System.out.printf("%s (%s) (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
-                    enemy.getName(), enemy.getClass().getSimpleName(), enemy.getLevel(), enemy.getPosition().toString(),
-                    enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(),
-                    enemy.getRange(), enemy.getSpeed());
-        }
+        printAliveUnits(enemies, this::printEnemyStats);
         System.out.println("------------------------");
     }
 
@@ -97,12 +77,7 @@ public class ConsoleOutput implements GameOutput {
         System.out.println("5. Exit the shop");
 
         System.out.println("Select a hero to upgrade:");
-        List<Hero> aliveHeroes = new ArrayList<>();
-        for (Hero h : heroes) {
-            if (h.isAlive()) {
-                aliveHeroes.add(h);
-            }
-        }
+        List<Hero> aliveHeroes = collectAliveHeroes(heroes);
         if (aliveHeroes.isEmpty()) {
             System.out.println("No heroes available for upgrade.");
         } else {
@@ -124,7 +99,38 @@ public class ConsoleOutput implements GameOutput {
         for (int i = 0; i < targets.size(); i++) {
             Unit u = targets.get(i);
             System.out.printf("%d: %s by %s (HP: %d/%d) Damage: %d%n",
-                    i, u.getName(), u.getPosition().toString(), u.getHealth(), u.getMaxHealth(), u.getDamage());
+                    i, u.getName(), u.getPosition(), u.getHealth(), u.getMaxHealth(), u.getDamage());
         }
+    }
+
+    private static List<Hero> collectAliveHeroes(List<Hero> heroes) {
+        List<Hero> aliveHeroes = new ArrayList<>();
+        for (Hero hero : heroes) {
+            if (hero.isAlive()) {
+                aliveHeroes.add(hero);
+            }
+        }
+        return aliveHeroes;
+    }
+
+    private static <T extends Unit> void printAliveUnits(List<T> units, java.util.function.Consumer<T> printer) {
+        for (T unit : units) {
+            if (unit.isAlive()) {
+                printer.accept(unit);
+            }
+        }
+    }
+
+    private void printHeroStats(Hero hero) {
+        String tauntStatus = (hero instanceof Tauntable tauntable && tauntable.isTaunting()) ? " (Provocation)" : "";
+        System.out.printf("  %s%s (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
+                hero.getName(), tauntStatus, hero.getLevel(), hero.getPosition(), hero.getHealth(),
+                hero.getMaxHealth(), hero.getDamage(), hero.getRange(), hero.getSpeed());
+    }
+
+    private void printEnemyStats(Enemy enemy) {
+        System.out.printf("%s (%s) (Lvl.%d) Position: %s, HP: %d/%d, Damage: %d, Range: %d, Speed: %d%n",
+                enemy.getName(), enemy.getClass().getSimpleName(), enemy.getLevel(), enemy.getPosition(),
+                enemy.getHealth(), enemy.getMaxHealth(), enemy.getDamage(), enemy.getRange(), enemy.getSpeed());
     }
 }

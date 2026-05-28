@@ -9,8 +9,7 @@ public class Board {
     }
 
     public boolean isValidPosition(Position pos) {
-        if (pos == null) return false;
-        return pos.getX() >= 0 && pos.getX() < SIZE && pos.getY() >= 0 && pos.getY() < SIZE;
+        return pos != null && pos.getX() >= 0 && pos.getX() < SIZE && pos.getY() >= 0 && pos.getY() < SIZE;
     }
 
     public boolean isEmpty(Position pos) {
@@ -24,11 +23,11 @@ public class Board {
         Position pos = unit.getPosition();
 
         if (!isValidPosition(pos)) {
-            System.err.printf("Error: com.game.board.Position %s is invalid.%n", pos);
+            printError("Error: Position %s is invalid.%n", pos);
         } else if (!isEmpty(pos)) {
             // Displaying the unit that is occupying the spot for better debugging
             Locatable blockingUnit = grid[pos.getY()][pos.getX()];
-            System.err.printf("Error: com.game.board.Position %s is occupied by %s (%s).%n",
+            printError("Error: Position %s is occupied by %s (%s).%n",
                     pos, blockingUnit.toString(), blockingUnit.getClass().getSimpleName());
         } else {
             grid[pos.getY()][pos.getX()] = unit;
@@ -37,7 +36,7 @@ public class Board {
 
     public void removeUnit(Locatable unit) {
         if (unit == null || unit.getPosition() == null) {
-            System.err.printf("Error: Cannot remove null unit or unit with null position.%n");
+            printError("Error: Cannot remove null unit or unit with null position.%n");
             return;
         }
         Position pos = unit.getPosition();
@@ -49,19 +48,19 @@ public class Board {
 
     public void updatePosition(Locatable unit, Position newPos) {
         if (unit == null || newPos == null) {
-            System.err.printf("Error: Incorrect data for updating position.%n");
+            printError("Error: Incorrect data for updating position.%n");
             return;
         }
 
         if (!isValidPosition(newPos)) {
-            System.err.printf("Error: New position %s is invalid.%n", newPos);
+            printError("Error: New position %s is invalid.%n", newPos);
             return;
         }
 
         Position oldPos = unit.getPosition();
         Locatable unitAtNewPos = grid[newPos.getY()][newPos.getX()];
         if (unitAtNewPos != null && unitAtNewPos != unit) {
-            System.err.printf("Error: com.game.board.Position %s occupied by another unit: %s.%n",
+            printError("Error: Position %s occupied by another unit: %s.%n",
                     newPos, unitAtNewPos);
             return;
         }
@@ -77,5 +76,9 @@ public class Board {
             return null;
         }
         return grid[pos.getY()][pos.getX()];
+    }
+
+    private static void printError(String format, Object... args) {
+        System.err.printf(format, args);
     }
 }

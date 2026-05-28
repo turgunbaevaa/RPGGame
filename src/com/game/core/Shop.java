@@ -12,6 +12,12 @@ import java.util.List;
  * Between-wave upgrades; keeps shop flow out of {@link GameController}.
  */
 public class Shop {
+    private static final int EXIT_CHOICE = 5;
+    private static final int UPGRADE_HP = 1;
+    private static final int UPGRADE_DAMAGE = 2;
+    private static final int UPGRADE_SPEED = 3;
+    private static final int UPGRADE_RANGE = 4;
+
     private final GameInput input;
     private final GameOutput output;
 
@@ -30,7 +36,7 @@ public class Shop {
         while (true) {
             int choice = input.getIntInput("Select upgrade or '5' to exit: ");
 
-            if (choice == 5) {
+            if (choice == EXIT_CHOICE) {
                 output.displayMessage("Exiting the store.");
                 break;
             }
@@ -72,59 +78,67 @@ public class Shop {
     }
 
     private int handleUpgradePurchase(int choice, Hero targetHero, int gold, List<Hero> heroes, List<Enemy> enemies) {
-        int cost;
-        String upgradeType;
-
-        switch (choice) {
-            case 1:
-                cost = 20;
-                upgradeType = "HP";
-                break;
-            case 2:
-                cost = 15;
-                upgradeType = "Damage";
-                break;
-            case 3:
-                cost = 25;
-                upgradeType = "Speed";
-                break;
-            case 4:
-                cost = 20;
-                upgradeType = "Range";
-                break;
-            default:
-                output.displayError("Incorrect upgrade selection.");
-                return gold;
+        UpgradeOption option = UpgradeOption.fromChoice(choice);
+        if (option == null) {
+            output.displayError("Incorrect upgrade selection.");
+            return gold;
         }
 
-        if (gold >= cost) {
-            int balance = gold - cost;
-            applyUpgrade(choice, targetHero);
+        if (gold >= option.cost) {
+            int balance = gold - option.cost;
+            applyUpgrade(option, targetHero);
             output.displayMessage(String.format("Successfully improved %s %s at %s. Gold: %d%n",
-                    targetHero.getName(), upgradeType, targetHero.getPosition().toString(), balance));
+                    targetHero.getName(), option.label, targetHero.getPosition(), balance));
             output.displayUnitStats(heroes, enemies);
             return balance;
         }
-        output.displayMessage(String.format("Not enough gold for this upgrade! You need %d, you have %d.", cost, gold));
+        output.displayMessage(String.format("Not enough gold for this upgrade! You need %d, you have %d.", option.cost, gold));
         return gold;
     }
 
-    private static void applyUpgrade(int choice, Hero targetHero) {
-        switch (choice) {
-            case 1:
+    private static void applyUpgrade(UpgradeOption option, Hero targetHero) {
+        switch (option.choice) {
+            case UPGRADE_HP:
                 targetHero.upgradeHealthStat(20);
                 break;
-            case 2:
+            case UPGRADE_DAMAGE:
                 targetHero.upgradeDamageStat(5);
                 break;
-            case 3:
+            case UPGRADE_SPEED:
                 targetHero.upgradeSpeedStat(1);
                 break;
-            case 4:
+            case UPGRADE_RANGE:
                 targetHero.upgradeRangeStat(1);
                 break;
             default:
                 break;
+        }
+    }
+
+    private static final class UpgradeOption {
+        private final int choice;
+        private final int cost;
+        private final String label;
+
+        private UpgradeOption(int choice, int cost, String label) {
+            this.choice = choice;
+            this.cost = cost;
+            this.label = label;
+        }
+
+        private static UpgradeOption fromChoice(int choice) {
+            switch (choice) {
+                case UPGRADE_HP:
+                    return new UpgradeOption(UPGRADE_HP, 20, "HP");
+                case UPGRADE_DAMAGE:
+                    return new UpgradeOption(UPGRADE_DAMAGE, 15, "Damage");
+                case UPGRADE_SPEED:
+                    return new UpgradeOption(UPGRADE_SPEED, 25, "Speed");
+                case UPGRADE_RANGE:
+                    return new UpgradeOption(UPGRADE_RANGE, 20, "Range");
+                default:
+                    return null;
+            }
         }
     }
 }
